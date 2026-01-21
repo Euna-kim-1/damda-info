@@ -9,14 +9,14 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("API root is working");
+    res.send("API root is working");
 });
 
 app.get("/health", (req, res) => {
-  res.json({ ok: true });
+    res.json({ ok: true });
 });
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT}`);
+    console.log(`API listening on http://localhost:${PORT}`);
 });
