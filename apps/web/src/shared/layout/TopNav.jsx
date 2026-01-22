@@ -26,9 +26,15 @@ export default function TopNav() {
           <MenuIcon />
         </IconButton>
 
-        <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: 0.2 }}>
-          Damda
-        </Typography>
+        <Box
+          component="img"
+          src="/damda-logo.png"
+          alt="Damda"
+          sx={{
+            height: 60,
+            width: 'auto',
+          }}
+        />
 
         <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
           <Box sx={{ width: '100%', maxWidth: 560 }}>
