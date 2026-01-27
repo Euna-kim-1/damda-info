@@ -31,7 +31,8 @@ app.get("/stores", async (req, res) => {
     try {
         const { data, error } = await supabase
             .from("stores")
-            .select("id, name")
+            .select("id, name, city, address, lat, lng, phone, operation_time, note, is_active")
+            .eq("is_active", true)
             .order("name", { ascending: true });
 
         if (error) throw error;
