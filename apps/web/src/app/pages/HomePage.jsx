@@ -1,4 +1,5 @@
 import { Box, Typography, Stack } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../shared/layout/ContainerSection';
 import PrimaryButton from '../../shared/ui/PrimaryButton';
 import { useReportsList } from '../../features/reports/hooks';
@@ -11,6 +12,7 @@ function money(n) {
 }
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const { data, isLoading, isError } = useReportsList({
     page: 1,
     pageSize: 10,
@@ -48,7 +50,9 @@ export default function HomePage() {
           </Typography>
 
           <Box>
-            <PrimaryButton>Shop now</PrimaryButton>
+            <PrimaryButton onClick={() => navigate('/upload')}>
+              Upload now
+            </PrimaryButton>
           </Box>
         </Stack>
       </Box>
