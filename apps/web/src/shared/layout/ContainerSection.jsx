@@ -5,7 +5,7 @@ export default function ContainerSection({ children, sx }) {
     <Container
       maxWidth="lg"
       sx={{
-        px: { xs: 2, md: 3 },
+        px: { xs: 2, md: 15 },
         ...sx,
       }}
     >

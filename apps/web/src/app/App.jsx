@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import theme from './providers/theme';
 import AppShell from '../shared/layout/AppShell';
 import HomePage from './pages/HomePage';
+import UploadPage from './pages/UploadPage';
 
 const queryClient = new QueryClient();
 
@@ -17,7 +18,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             {/* 임시 라우트들 */}
-            <Route path="/reports" element={<HomePage />} />
+            <Route path="/upload" element={<UploadPage />} />
             <Route path="/community" element={<HomePage />} />
             <Route path="/calculator" element={<HomePage />} />
             <Route path="/profile" element={<HomePage />} />

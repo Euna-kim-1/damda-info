@@ -1,4 +1,5 @@
 import { Box, Typography, Stack } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../shared/layout/ContainerSection';
 import PrimaryButton from '../../shared/ui/PrimaryButton';
 import { useReportsList } from '../../features/reports/hooks';
@@ -11,6 +12,7 @@ function money(n) {
 }
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const { data, isLoading, isError } = useReportsList({
     page: 1,
     pageSize: 10,
@@ -18,7 +20,7 @@ export default function HomePage() {
   const items = data?.items ?? [];
 
   return (
-    <ContainerSection sx={{ py: 3 }}>
+    <ContainerSection sx={{ py: 2 }}>
       {/* Hero */}
       <Box
         sx={{
@@ -31,24 +33,25 @@ export default function HomePage() {
         }}
       >
         <Stack spacing={2}>
-          <Typography
-            sx={{
-              fontWeight: 900,
-              lineHeight: 1.05,
-              fontSize: { xs: 32, md: 44 },
-            }}
-          >
-            We bring the store
+          <Typography variant="h4">
+            Share prices.
             <br />
-            to your door
+            Help your neighbors.
           </Typography>
 
-          <Typography sx={{ color: 'text.secondary', maxWidth: 420 }}>
-            Compare groceries and find the best price across stores.
+          <Typography
+            variant="overline"
+            sx={{
+              color: 'text.secondary',
+            }}
+          >
+            Find the best price near you.
           </Typography>
 
           <Box>
-            <PrimaryButton>Shop now</PrimaryButton>
+            <PrimaryButton onClick={() => navigate('/upload')}>
+              Share a price
+            </PrimaryButton>
           </Box>
         </Stack>
       </Box>
