@@ -28,7 +28,7 @@ export default function TopNav() {
 
         <Box
           component="img"
-          src="/damda-logo.png"
+          src="/logo.png"
           alt="Damda"
           sx={{
             height: 60,

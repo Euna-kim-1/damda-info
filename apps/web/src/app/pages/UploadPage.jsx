@@ -42,44 +42,13 @@ export default function UploadPage() {
     onPick,
     uploadReport,
     uploadLoading,
+    resetUpload,
+    hasFile,
   } = useUploadReport();
-
-  const fieldSx = {
-    '& .MuiInputLabel-root': { color: 'text.secondary' },
-    '& .MuiInputLabel-root.Mui-focused': { color: 'primary.main' },
-    '& .MuiInputBase-root': {
-      color: 'text.primary',
-      bgcolor: 'background.default',
-    },
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-  };
 
   return (
     <Box sx={{ maxWidth: 860, mx: 'auto', px: { xs: 1.5, sm: 2 }, py: 3 }}>
       <Stack spacing={2.5}>
-        <Box>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            spacing={2}
-          >
-            <Typography sx={{ fontWeight: 900, fontSize: { xs: 24, md: 28 } }}>
-              Damda OCR Upload
-            </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<ArrowBackRoundedIcon />}
-              onClick={() => navigate(-1)}
-              sx={{ borderRadius: 999 }}
-            >
-              Back
-            </Button>
-          </Stack>
-        </Box>
-
         <Paper
           sx={{
             p: 2.5,
@@ -95,26 +64,55 @@ export default function UploadPage() {
               direction="row"
               spacing={1.5}
               alignItems="center"
-              flexWrap="wrap"
+              justifyContent="space-between"
             >
-              <Button variant="contained" component="label" disabled={loading}>
-                Choose photo
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  hidden
-                  onChange={onPick}
-                />
+              <Stack
+                direction="row"
+                spacing={1.5}
+                alignItems="center"
+                flexWrap="wrap"
+              >
+                <Button
+                  variant="contained"
+                  component="label"
+                  disabled={loading}
+                >
+                  Choose photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    hidden
+                    onChange={onPick}
+                  />
+                </Button>
+                {hasFile && (
+                  <Button
+                    variant="text"
+                    onClick={resetUpload}
+                    disabled={loading || uploadLoading}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                {loading && (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <CircularProgress size={18} />
+                    <Typography sx={{ color: 'text.secondary' }}>
+                      Running OCR…
+                    </Typography>
+                  </Stack>
+                )}
+              </Stack>
+
+              <Button
+                variant="text"
+                size="small"
+                startIcon={<ArrowBackRoundedIcon />}
+                onClick={() => navigate(-1)}
+              >
+                Back
               </Button>
-              {loading && (
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <CircularProgress size={18} />
-                  <Typography sx={{ color: 'text.secondary' }}>
-                    Running OCR…
-                  </Typography>
-                </Stack>
-              )}
             </Stack>
 
             {previewUrl && (
@@ -152,26 +150,32 @@ export default function UploadPage() {
                 <Typography sx={{ fontWeight: 800, mb: 1 }}>
                   Extracted
                 </Typography>
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                  <Box sx={{ minWidth: 140 }}>
-                    <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
-                      OCR status
-                    </Typography>
-                    <Typography sx={{ fontWeight: 700 }}>
-                      {loading ? 'Running…' : 'Idle'}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
-                      Price
-                    </Typography>
-                    <Typography sx={{ fontWeight: 700 }}>
-                      {price || '(none)'}
-                    </Typography>
-                  </Box>
+
+                <Stack spacing={1}>
+                  {[
+                    ['OCR status', loading ? 'Running…' : 'Idle'],
+                    ['Price', price || '—'],
+                    ['Final name', finalName || '—'],
+                  ].map(([label, value]) => (
+                    <Stack
+                      key={label}
+                      direction="row"
+                      justifyContent="space-between"
+                      sx={{
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        py: 0.75,
+                      }}
+                    >
+                      <Typography sx={{ color: 'text.secondary' }}>
+                        {label}
+                      </Typography>
+                      <Typography sx={{ fontWeight: 700 }}>{value}</Typography>
+                    </Stack>
+                  ))}
                 </Stack>
 
-                <Typography sx={{ fontWeight: 700, mb: 1 }}>
+                <Typography sx={{ fontWeight: 700, mt: 2, mb: 1 }}>
                   Name candidates
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -202,7 +206,6 @@ export default function UploadPage() {
                   {...register('manualName')}
                   placeholder="Type a name if OCR is off"
                   fullWidth
-                  sx={fieldSx}
                   error={submitted && !!errors.manualName}
                   helperText={
                     submitted && errors.manualName
@@ -231,7 +234,6 @@ export default function UploadPage() {
                 render={({ field }) => (
                   <FormControl
                     fullWidth
-                    sx={fieldSx}
                     error={submitted && !!errors.storeName}
                   >
                     <InputLabel id="store-label">Store</InputLabel>
@@ -260,7 +262,6 @@ export default function UploadPage() {
                 {...register('unit')}
                 placeholder="e.g. 1kg / 945 mL"
                 fullWidth
-                sx={fieldSx}
               />
 
               <TextField
@@ -268,7 +269,6 @@ export default function UploadPage() {
                 {...register('notes')}
                 placeholder="e.g. on sale, member price..."
                 fullWidth
-                sx={fieldSx}
               />
 
               <Stack
@@ -330,7 +330,6 @@ export default function UploadPage() {
                 },
               }}
               fullWidth
-              sx={fieldSx}
             />
           </Stack>
         </Paper>

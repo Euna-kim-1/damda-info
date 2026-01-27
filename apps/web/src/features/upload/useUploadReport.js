@@ -39,6 +39,7 @@ export function useUploadReport() {
     control,
     register,
     handleSubmit,
+    reset,
     setValue,
     watch,
     formState: { errors, isSubmitting },
@@ -172,6 +173,23 @@ export function useUploadReport() {
     return () => URL.revokeObjectURL(previewUrl);
   }, [previewUrl]);
 
+  const resetUpload = () => {
+    setPickedFile(null);
+    setPreviewUrl('');
+    setOcrText('');
+    setPrice('');
+    setNameCandidates([]);
+    setSaveMsg('');
+    setSubmitted(false);
+    reset({
+      storeName: storeName || '',
+      productName: '',
+      manualName: '',
+      unit: '',
+      notes: '',
+    });
+  };
+
   const missingFile = !pickedFile;
   const missingPrice = !price;
   const missingName = !finalName;
@@ -229,5 +247,7 @@ export function useUploadReport() {
     onPick,
     uploadReport,
     uploadLoading: uploadMutation.isPending || isSubmitting,
+    resetUpload,
+    hasFile: !!pickedFile,
   };
 }
