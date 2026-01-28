@@ -1,7 +1,22 @@
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Tooltip,
+  useMap,
+  ZoomControl,
+} from 'react-leaflet';
 import { useEffect, useMemo, useState } from 'react';
 import L from 'leaflet';
-import { Box } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  Divider,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { apiGet } from '../../../shared/api/client';
 
 function FitToStores({ stores, padding }) {
@@ -78,7 +93,9 @@ export default function StoresMapView({
         center={[51.0447, -114.0719]} // fallback
         zoom={12}
         scrollWheelZoom={scrollWheelZoom}
+        zoomControl={false}
       >
+        <ZoomControl position="topright" />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           attribution="&copy; OSM &copy; CARTO"
@@ -93,33 +110,88 @@ export default function StoresMapView({
             key={s.id || s.name}
             position={[Number(s.lat), Number(s.lng)]}
           >
+            <Tooltip permanent direction="top" offset={[0, -8]} opacity={1}>
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  color: 'text.primary',
+                }}
+              >
+                {s.name}
+              </Typography>
+            </Tooltip>
+
             {showPopups && (
               <Popup>
-                <div style={{ minWidth: 220 }}>
-                  <div style={{ fontWeight: 800 }}>{s.name}</div>
-                  <div style={{ fontSize: 13, marginTop: 6 }}>
-                    {s.address}
-                    {s.city ? `, ${s.city}` : ''}
-                  </div>
+                <Card
+                  elevation={0}
+                  sx={{
+                    minWidth: 320,
+                  }}
+                >
+                  <CardContent sx={{ p: 1, '&:last-child': { p: 1 } }}>
+                    <Typography variant="h5">{s.name}</Typography>
 
-                  {s.operation_time && (
-                    <div
-                      style={{
-                        fontSize: 13,
-                        marginTop: 6,
-                        whiteSpace: 'pre-line',
-                      }}
-                    >
-                      🕒 {s.operation_time}
-                    </div>
-                  )}
+                    <Divider sx={{ mb: 1 }} />
 
-                  {s.phone && (
-                    <div style={{ fontSize: 13, marginTop: 6 }}>
-                      📞 <a href={`tel:${s.phone}`}>{s.phone}</a>
-                    </div>
-                  )}
-                </div>
+                    <Stack spacing={0.5}>
+                      <Typography
+                        sx={{ fontSize: 11, color: 'text.secondary' }}
+                      >
+                        Address
+                      </Typography>
+                      <Typography sx={{ fontSize: 12.5 }}>
+                        {s.address}
+                      </Typography>
+                    </Stack>
+
+                    <Stack spacing={0.75}>
+                      <Typography
+                        sx={{ fontSize: 11, color: 'text.secondary' }}
+                      >
+                        Opening Hours
+                      </Typography>
+                      {s.operation_time ? (
+                        <Typography
+                          sx={{
+                            fontSize: 12.5,
+                            whiteSpace: 'pre-line',
+                          }}
+                        >
+                          {s.operation_time}
+                        </Typography>
+                      ) : (
+                        <Typography
+                          sx={{ fontSize: 12.5, color: 'text.secondary' }}
+                        >
+                          —
+                        </Typography>
+                      )}
+
+                      {s.phone && (
+                        <>
+                          <Typography
+                            sx={{ fontSize: 11, color: 'text.secondary' }}
+                          >
+                            Contact Info
+                          </Typography>
+                          <Box
+                            component="a"
+                            href={`tel:${s.phone}`}
+                            sx={{
+                              fontSize: 12.5,
+                              color: 'text.primary',
+                              textDecoration: 'none',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {s.phone}
+                          </Box>
+                        </>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
               </Popup>
             )}
           </Marker>
