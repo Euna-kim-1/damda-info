@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { extractBestPrice, extractNameCandidates } from './uploadUtils';
+import { apiGet, apiPostForm } from '../../shared/api/client';
 
 const formSchema = z
   .object({
@@ -24,14 +25,11 @@ const formSchema = z
   });
 
 export function useUploadReport() {
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
-
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [ocrText, setOcrText] = useState('');
   const [price, setPrice] = useState('');
   const [nameCandidates, setNameCandidates] = useState([]);
-
   const [saveMsg, setSaveMsg] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -67,10 +65,8 @@ export function useUploadReport() {
     queryKey: ['stores'],
     queryFn: async () => {
       try {
-        const r = await fetch(`${API_BASE}/stores`);
-        const data = await r.json();
-        if (!r.ok) throw new Error(JSON.stringify(data));
-        return data.stores || [];
+        const data = await apiGet('/stores');
+        return data?.stores || [];
       } catch (e) {
         console.error('stores fetch failed:', e);
         return [
@@ -83,11 +79,11 @@ export function useUploadReport() {
   });
 
   useEffect(() => {
-    if (!storesQuery.data?.length) return;
-    if (!storesQuery.data.some((s) => s.name === storeName)) {
-      setValue('storeName', storesQuery.data[0]?.name || '', {
-        shouldValidate: true,
-      });
+    const list = storesQuery.data || [];
+    if (list.length === 0) return;
+
+    if (!list.some((s) => s.name === storeName)) {
+      setValue('storeName', list[0]?.name || '', { shouldValidate: true });
     }
   }, [setValue, storeName, storesQuery.data]);
 
@@ -96,11 +92,9 @@ export function useUploadReport() {
       const form = new FormData();
       form.append('image', file);
 
-      const r = await fetch(`${API_BASE}/ocr`, { method: 'POST', body: form });
-      const data = await r.json();
-      if (!r.ok) throw new Error(JSON.stringify(data));
+      const data = await apiPostForm('/ocr', form);
 
-      const raw = data.text || '';
+      const raw = data?.text || '';
       const nextPrice = extractBestPrice(raw);
       const candidates = extractNameCandidates(raw, nextPrice);
       return { raw, nextPrice, candidates };
@@ -125,19 +119,12 @@ export function useUploadReport() {
       const form = new FormData();
       form.append('image', file);
       form.append('storeName', values.storeName.trim());
-      form.append('productName', values.productName.trim());
+      form.append('productName', (values.productName || '').trim());
       form.append('price', price);
       if (values.unit?.trim()) form.append('unit', values.unit.trim());
       if (values.notes?.trim()) form.append('notes', values.notes.trim());
 
-      const r = await fetch(`${API_BASE}/report`, {
-        method: 'POST',
-        body: form,
-      });
-
-      const data = await r.json();
-      if (!r.ok) throw new Error(JSON.stringify(data));
-      return data;
+      return apiPostForm('/report', form);
     },
     onSuccess: () => {
       setSaveMsg('✅ Upload complete! (Storage + DB saved)');
@@ -233,6 +220,7 @@ export function useUploadReport() {
     saveMsg,
     submitted,
     finalName,
+
     missingFile,
     missingPrice,
     missingName,

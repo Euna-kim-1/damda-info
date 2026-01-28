@@ -6,6 +6,7 @@ import theme from './providers/theme';
 import AppShell from '../shared/layout/AppShell';
 import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
+import Map from '../storesMap'
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/community" element={<HomePage />} />
             <Route path="/calculator" element={<HomePage />} />
             <Route path="/profile" element={<HomePage />} />
+            <Route path="/storesMap" element={<Map />} />
           </Routes>
         </AppShell>
       </ThemeProvider>
