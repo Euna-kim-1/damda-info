@@ -1,9 +1,10 @@
-import { Box, Typography, Stack } from '@mui/material';
+import { Box, Typography, Stack, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../shared/layout/ContainerSection';
 import PrimaryButton from '../../shared/ui/PrimaryButton';
 import { useReportsList } from '../../features/reports/hooks';
 import { ReportCard } from '../../shared/ui/reports';
+import StoresMapView from './store/StoresMapView';
 
 function money(n) {
   const num = Number(n);
@@ -90,6 +91,27 @@ export default function HomePage() {
               imageUrl={r.photoUrl} // ❗ 없으면 undefined → 자동으로 cart.png
             />
           ))}
+        </Box>
+      </Box>
+
+      <Box sx={{ mt: 3 }}>
+        <Typography sx={{ fontWeight: 800, mb: 1.5 }}>Stores</Typography>
+
+        <Box sx={{ position: 'relative' }}>
+          <StoresMapView />
+          <Button
+            variant="contained"
+            onClick={() => navigate('/storesMap')}
+            sx={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              zIndex: 1000,
+              pointerEvents: 'auto',
+            }}
+          >
+            View store details
+          </Button>
         </Box>
       </Box>
     </ContainerSection>

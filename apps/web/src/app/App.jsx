@@ -6,7 +6,7 @@ import theme from './providers/theme';
 import AppShell from '../shared/layout/AppShell';
 import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
-import Map from '../storesMap'
+import Map from './pages/store/storesMap';
 
 const queryClient = new QueryClient();
 

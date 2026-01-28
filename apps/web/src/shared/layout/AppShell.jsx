@@ -19,9 +19,9 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 const NAV_HEIGHT = 72;
 
 const navItems = [
+  { label: 'Upload', value: '/upload', icon: <LocalOfferRoundedIcon /> },
+  { label: 'Store', value: '/storesMap', icon: <PeopleAltRoundedIcon /> },
   { label: 'Home', value: '/', icon: <StorefrontRoundedIcon /> },
-  { label: 'Deals', value: '/reports', icon: <LocalOfferRoundedIcon /> },
-  { label: 'Community', value: '/community', icon: <PeopleAltRoundedIcon /> },
   { label: 'Calculator', value: '/calculator', icon: <CalculateRoundedIcon /> },
   { label: 'Profile', value: '/profile', icon: <PersonRoundedIcon /> },
 ];
