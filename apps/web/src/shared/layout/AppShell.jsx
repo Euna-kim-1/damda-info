@@ -3,12 +3,11 @@ import {
   Paper,
   BottomNavigation,
   BottomNavigationAction,
-  useTheme,
-  useMediaQuery,
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import TopNav from './TopNav';
+import ContainerSection from './ContainerSection';
 
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
@@ -27,9 +26,6 @@ const navItems = [
 ];
 
 export default function AppShell({ children }) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -55,23 +51,22 @@ export default function AppShell({ children }) {
       {/* 상단 네비는 공통 */}
       <TopNav />
 
-      {/* 콘텐츠 */}
-      <Box sx={{ pb: isMobile ? `${NAV_HEIGHT + 16}px` : 0 }}>{children}</Box>
+      <Box sx={{ pb: `${NAV_HEIGHT + 16}px` }}>{children}</Box>
 
-      {/* 모바일일 때만 하단 네비 */}
-      {isMobile && (
-        <Paper
-          elevation={12}
-          sx={{
-            position: 'fixed',
-            left: 0,
-            right: 0,
-            bottom: 0,
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            pb: 'env(safe-area-inset-bottom)',
-          }}
-        >
+      <Paper
+        elevation={12}
+        sx={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          pb: 'env(safe-area-inset-bottom)',
+          zIndex: (theme) => theme.zIndex.appBar + 10,
+        }}
+      >
+        <ContainerSection>
           <BottomNavigation
             value={current}
             onChange={(e, next) => navigate(next)}
@@ -87,8 +82,8 @@ export default function AppShell({ children }) {
               />
             ))}
           </BottomNavigation>
-        </Paper>
-      )}
+        </ContainerSection>
+      </Paper>
     </Box>
   );
 }
