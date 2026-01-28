@@ -95,7 +95,7 @@ export default function StoresMapView({
         scrollWheelZoom={scrollWheelZoom}
         zoomControl={false}
       >
-        <ZoomControl position="topright" />
+        <ZoomControl position="bottomright" />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           attribution="&copy; OSM &copy; CARTO"
