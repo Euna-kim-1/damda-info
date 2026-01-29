@@ -1,5 +1,4 @@
 import { AppBar, Toolbar, IconButton, Box, Avatar } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import SearchInput from '../ui/SearchInput';
 import ContainerSection from './ContainerSection';
 
@@ -15,11 +14,7 @@ export default function TopNav() {
       }}
     >
       <ContainerSection>
-        <Toolbar sx={{ gap: 1.5 }}>
-          <IconButton edge="start" sx={{ color: 'text.primary' }}>
-            <MenuIcon />
-          </IconButton>
-
+        <Toolbar sx={{ gap: 3 }}>
           <Box
             component="img"
             src="/logo.png"
@@ -31,7 +26,7 @@ export default function TopNav() {
           />
 
           <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <Box sx={{ width: '100%', maxWidth: 560 }}>
+            <Box sx={{ width: '100%', maxWidth: 650 }}>
               <SearchInput placeholder="Search for product..." />
             </Box>
           </Box>

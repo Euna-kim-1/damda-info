@@ -18,6 +18,10 @@ import {
   Typography,
 } from '@mui/material';
 import { apiGet } from '../../../shared/api/client';
+import {
+  createStoreMarkerIcons,
+  getStoreMarkerIcon,
+} from '../../../shared/ui/store/StoreMapIcons';
 
 function FitToStores({ stores, padding }) {
   const map = useMap();
@@ -44,6 +48,11 @@ export default function StoresMapView({
 }) {
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const storeIcons = useMemo(
+    () => createStoreMarkerIcons(),
+    [],
+  );
 
   const mappableStores = useMemo(
     () =>
@@ -109,6 +118,7 @@ export default function StoresMapView({
           <Marker
             key={s.id || s.name}
             position={[Number(s.lat), Number(s.lng)]}
+            icon={getStoreMarkerIcon(s?.name, storeIcons)}
           >
             <Tooltip permanent direction="top" offset={[0, -8]} opacity={1}>
               <Typography
