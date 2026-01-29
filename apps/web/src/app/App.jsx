@@ -7,6 +7,8 @@ import AppShell from '../shared/layout/AppShell';
 import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
 import Map from '../storesMap'
+import ListsPage from './pages/ListsPage';
+import ListDetailPage from './pages/ListDetailPage'
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ export default function App() {
             <Route path="/calculator" element={<HomePage />} />
             <Route path="/profile" element={<HomePage />} />
             <Route path="/storesMap" element={<Map />} />
+            <Route path="/lists" element={<ListsPage />} />
+            <Route path="/lists/:listId" element={<ListDetailPage />} />
           </Routes>
         </AppShell>
       </ThemeProvider>

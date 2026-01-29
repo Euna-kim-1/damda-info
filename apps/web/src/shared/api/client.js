@@ -23,3 +23,25 @@ export async function apiPostForm(path, formData) {
     if (!r.ok) throw new Error(data?.error || JSON.stringify(data));
     return data;
 }
+
+export async function apiPostJson(path, body) {
+    const r = await fetch(`${API_BASE}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body ?? {}),
+    });
+    const data = await parseJsonSafe(r);
+    if (!r.ok) throw new Error(data?.error || JSON.stringify(data));
+    return data;
+}
+
+export async function apiPatchJson(path, body) {
+    const r = await fetch(`${API_BASE}${path}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body ?? {}),
+    });
+    const data = await parseJsonSafe(r);
+    if (!r.ok) throw new Error(data?.error || JSON.stringify(data));
+    return data;
+}
