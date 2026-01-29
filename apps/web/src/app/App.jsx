@@ -10,6 +10,7 @@ import Map from '../storesMap'
 import ListsPage from './pages/ListsPage';
 import ListDetailPage from './pages/ListDetailPage'
 
+
 const queryClient = new QueryClient();
 
 export default function App() {
