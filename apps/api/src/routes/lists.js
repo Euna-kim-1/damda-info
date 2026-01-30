@@ -53,6 +53,39 @@ router.post("/", async (req, res) => {
 });
 
 /**
+ * DELETE /lists/:listId?device_id=...
+ */
+router.delete("/:listId", async (req, res) => {
+    try {
+        const { listId } = req.params;
+        const deviceId = req.query.device_id;
+        if (!deviceId) return res.status(400).json({ error: "device_id is required" });
+
+        const { error: itemsError } = await supabase
+            .from("shopping_list_items")
+            .delete()
+            .eq("list_id", listId)
+            .eq("device_id", deviceId);
+
+        if (itemsError) throw itemsError;
+
+        const { data, error } = await supabase
+            .from("shopping_lists")
+            .delete()
+            .eq("id", listId)
+            .eq("device_id", deviceId)
+            .select("id, title, created_at, updated_at")
+            .single();
+
+        if (error) throw error;
+        res.json({ ok: true, list: data });
+    } catch (err) {
+        console.error("DELETE /lists/:listId error:", err);
+        res.status(500).json({ ok: false, error: String(err?.message || err) });
+    }
+});
+
+/**
  * GET /lists/:listId/items?device_id=...
  */
 router.get("/:listId/items", async (req, res) => {

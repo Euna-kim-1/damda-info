@@ -7,8 +7,8 @@ import AppShell from '../shared/layout/AppShell';
 import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
 import Map from './pages/store/StoresMapView';
-import ListsPage from './pages/ListsPage';
-import ListDetailPage from './pages/ListDetailPage';
+import ListsPage from './pages/list/ListsPage';
+import ListDetailPage from './pages/list/ListDetailPage';
 
 const queryClient = new QueryClient();
 
