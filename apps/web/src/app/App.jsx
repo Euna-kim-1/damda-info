@@ -9,6 +9,7 @@ import UploadPage from './pages/UploadPage';
 import Map from './pages/store/StoresMapView';
 import ListsPage from './pages/ListsPage';
 import ListDetailPage from './pages/ListDetailPage';
+import CalculatorPage from './pages/CalculatorPage'
 
 const queryClient = new QueryClient();
 
@@ -22,7 +23,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/community" element={<HomePage />} />
-            <Route path="/calculator" element={<HomePage />} />
+            <Route path="/calculator" element={<CalculatorPage />} />
             <Route path="/profile" element={<HomePage />} />
             <Route path="/storesMap" element={<Map />} />
             <Route path="/lists" element={<ListsPage />} />
