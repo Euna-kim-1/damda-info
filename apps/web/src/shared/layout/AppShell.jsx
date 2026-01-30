@@ -7,22 +7,22 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import TopNav from './TopNav';
-import ContainerSection from './ContainerSection';
 
-import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
+import ContainerSection from './ContainerSection';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
-import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
 import CalculateRoundedIcon from '@mui/icons-material/CalculateRounded';
-import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import CottageIcon from '@mui/icons-material/Cottage';
 
 const NAV_HEIGHT = 72;
 
 const navItems = [
   { label: 'Upload', value: '/upload', icon: <LocalOfferRoundedIcon /> },
-  { label: 'Store', value: '/storesMap', icon: <PeopleAltRoundedIcon /> },
-  { label: 'Home', value: '/', icon: <StorefrontRoundedIcon /> },
+  { label: 'Store', value: '/storesMap', icon: <StorefrontIcon /> },
+  { label: 'Home', value: '/', icon: <CottageIcon /> },
   { label: 'Calculator', value: '/calculator', icon: <CalculateRoundedIcon /> },
-  { label: 'Profile', value: '/profile', icon: <PersonRoundedIcon /> },
+  { label: 'List', value: '/lists', icon: <ListAltIcon /> },
 ];
 
 export default function AppShell({ children }) {

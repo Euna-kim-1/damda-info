@@ -49,10 +49,7 @@ export default function StoresMapView({
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const storeIcons = useMemo(
-    () => createStoreMarkerIcons(),
-    [],
-  );
+  const storeIcons = useMemo(() => createStoreMarkerIcons(), []);
 
   const mappableStores = useMemo(
     () =>

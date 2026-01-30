@@ -20,7 +20,6 @@ export default function App() {
         <AppShell>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            {/* 임시 라우트들 */}
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/community" element={<HomePage />} />
             <Route path="/calculator" element={<HomePage />} />
