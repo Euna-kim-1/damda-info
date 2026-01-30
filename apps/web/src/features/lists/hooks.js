@@ -75,6 +75,21 @@ export function useUpdateListItem(listId) {
 
     return useMutation({
         mutationFn: ({ itemId, patch }) => updateListItem(itemId, patch),
+        onMutate: async ({ itemId, patch }) => {
+            await qc.cancelQueries({ queryKey: listKeys.items(deviceId, listId) });
+            const previous = qc.getQueryData(listKeys.items(deviceId, listId));
+            qc.setQueryData(listKeys.items(deviceId, listId), (old = []) =>
+                old.map((item) =>
+                    String(item.id) === String(itemId) ? { ...item, ...patch } : item
+                )
+            );
+            return { previous };
+        },
+        onError: (_err, _vars, ctx) => {
+            if (ctx?.previous) {
+                qc.setQueryData(listKeys.items(deviceId, listId), ctx.previous);
+            }
+        },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: listKeys.items(deviceId, listId) });
         },
@@ -87,6 +102,19 @@ export function useDeleteListItem(listId) {
 
     return useMutation({
         mutationFn: (itemId) => deleteListItem(itemId),
+        onMutate: async (itemId) => {
+            await qc.cancelQueries({ queryKey: listKeys.items(deviceId, listId) });
+            const previous = qc.getQueryData(listKeys.items(deviceId, listId));
+            qc.setQueryData(listKeys.items(deviceId, listId), (old = []) =>
+                old.filter((item) => String(item.id) !== String(itemId))
+            );
+            return { previous };
+        },
+        onError: (_err, _vars, ctx) => {
+            if (ctx?.previous) {
+                qc.setQueryData(listKeys.items(deviceId, listId), ctx.previous);
+            }
+        },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: listKeys.items(deviceId, listId) });
         },

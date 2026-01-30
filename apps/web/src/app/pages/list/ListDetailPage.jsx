@@ -4,11 +4,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   List,
   ListItem,
   ListItemButton,
@@ -18,7 +13,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import BackButton from '../../../shared/ui/buttons/BackButton';
+import DeleteCheckedButton from '../../../shared/ui/buttons/DeleteCheckedButton';
+import DeleteItemButton from '../../../shared/ui/buttons/DeleteItemButton';
+import ResetCheckedButton from '../../../shared/ui/buttons/ResetCheckedButton';
+import ListConfirmDialog from './ListConfirmDialog';
 import {
   useCreateListItem,
   useDeleteListItem,
@@ -40,7 +39,7 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
 
   function handlePointerDown(e) {
     if (disabled) return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.pointerType && e.pointerType !== 'touch') return;
     draggingRef.current = true;
     setIsDragging(true);
     startXRef.current = e.clientX;
@@ -52,6 +51,7 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
 
   function handlePointerMove(e) {
     if (!draggingRef.current || disabled) return;
+    if (e.pointerType && e.pointerType !== 'touch') return;
     const delta = e.clientX - startXRef.current;
     if (delta > 0) return;
     deltaRef.current = delta;
@@ -108,6 +108,7 @@ export default function ListDetailPage() {
   const updateItemMut = useUpdateListItem(listId);
   const deleteItemMut = useDeleteListItem(listId);
   const [confirmTarget, setConfirmTarget] = useState(null);
+  const [confirmBulk, setConfirmBulk] = useState(false);
 
   const [name, setName] = useState('');
 
@@ -129,6 +130,11 @@ export default function ListDetailPage() {
   }
 
   const sorted = useMemo(() => items ?? [], [items]);
+  const pendingItemId = updateItemMut.variables?.itemId;
+  const checkedItems = useMemo(
+    () => sorted.filter((item) => item.checked),
+    [sorted],
+  );
   const listTitle = useMemo(() => {
     if (!listId) return 'List';
     const fromLists = lists?.find(
@@ -151,18 +157,48 @@ export default function ListDetailPage() {
     deleteItemMut.mutate(confirmTarget.id, { onSettled: closeConfirm });
   }
 
+  function openBulkConfirm() {
+    if (checkedItems.length === 0) return;
+    setConfirmBulk(true);
+  }
+
+  function closeBulkConfirm() {
+    setConfirmBulk(false);
+  }
+
+  async function handleBulkDelete() {
+    if (checkedItems.length === 0) {
+      closeBulkConfirm();
+      return;
+    }
+    await Promise.all(
+      checkedItems.map((item) => deleteItemMut.mutateAsync(item.id)),
+    );
+    closeBulkConfirm();
+  }
+
+  async function handleResetChecked() {
+    if (checkedItems.length === 0) return;
+    await Promise.all(
+      checkedItems.map((item) =>
+        updateItemMut.mutateAsync({
+          itemId: item.id,
+          patch: { checked: false },
+        }),
+      ),
+    );
+  }
+
   return (
     <Box sx={{ px: 2, py: 2, maxWidth: 720, mx: 'auto' }}>
       <Stack
         direction="row"
         alignItems="center"
         spacing={1.25}
-        sx={{ mb: 1.5 }}
+        sx={{ mb: 1.5, width: '100%', justifyContent: 'space-between' }}
       >
         <Typography variant="h5">{listTitle}</Typography>
-        <Button size="small" variant="text" onClick={() => navigate('/lists')}>
-          ← Back
-        </Button>
+        <BackButton onClick={() => navigate('/lists')} />
       </Stack>
 
       <Typography
@@ -187,6 +223,17 @@ export default function ListDetailPage() {
           </Button>
         </Stack>
       </Box>
+      <Stack direction="row" spacing={1} sx={{ mb: 1, mt: -1 }}>
+        <DeleteCheckedButton
+          count={checkedItems.length}
+          onClick={openBulkConfirm}
+          disabled={checkedItems.length === 0}
+        />
+        <ResetCheckedButton
+          onClick={handleResetChecked}
+          disabled={checkedItems.length === 0 || updateItemMut.isPending}
+        />
+      </Stack>
 
       {isLoading && <Typography>Loading...</Typography>}
       {isError && (
@@ -215,8 +262,14 @@ export default function ListDetailPage() {
             >
               <ListItemButton
                 onClick={() => toggle(item)}
-                disabled={updateItemMut.isPending}
-                sx={{ alignItems: 'center' }}
+                disabled={
+                  updateItemMut.isPending &&
+                  String(pendingItemId) === String(item.id)
+                }
+                sx={{
+                  alignItems: 'center',
+                  '&.Mui-disabled': { opacity: 1, color: 'inherit' },
+                }}
               >
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   <Checkbox
@@ -237,36 +290,31 @@ export default function ListDetailPage() {
                     </Typography>
                   }
                 />
-                <Box
-                  sx={{
-                    minWidth: 36,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'text.secondary',
-                  }}
-                >
-                  <DeleteSweepIcon fontSize="small" color="error" />
-                </Box>
+                <DeleteItemButton
+                  onDelete={() => openConfirm(item)}
+                  disabled={deleteItemMut.isPending}
+                />
               </ListItemButton>
             </SwipeableRow>
           </ListItem>
         ))}
       </List>
-      <Dialog open={!!confirmTarget} onClose={closeConfirm}>
-        <DialogTitle>Delete item</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Delete "{confirmTarget?.name || 'this item'}"?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeConfirm}>Cancel</Button>
-          <Button color="error" onClick={handleConfirmDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ListConfirmDialog
+        open={!!confirmTarget}
+        title="Delete item"
+        message={`Delete "${confirmTarget?.name || 'this item'}"?`}
+        onClose={closeConfirm}
+        onConfirm={handleConfirmDelete}
+      />
+      <ListConfirmDialog
+        open={confirmBulk}
+        title="Delete checked items"
+        message={`Delete ${checkedItems.length} checked item${
+          checkedItems.length === 1 ? '' : 's'
+        }?`}
+        onClose={closeBulkConfirm}
+        onConfirm={handleBulkDelete}
+      />
     </Box>
   );
 }

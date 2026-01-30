@@ -3,11 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   List,
   ListItemButton,
   ListItemText,
@@ -15,7 +10,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import DeleteItemButton from '../../../shared/ui/buttons/DeleteItemButton';
+import ListConfirmDialog from './ListConfirmDialog';
 import {
   useCreateList,
   useDeleteList,
@@ -35,7 +31,7 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
 
   function handlePointerDown(e) {
     if (disabled) return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.pointerType && e.pointerType !== 'touch') return;
     draggingRef.current = true;
     setIsDragging(true);
     startXRef.current = e.clientX;
@@ -47,6 +43,7 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
 
   function handlePointerMove(e) {
     if (!draggingRef.current || disabled) return;
+    if (e.pointerType && e.pointerType !== 'touch') return;
     const delta = e.clientX - startXRef.current;
     if (delta > 0) return;
     deltaRef.current = delta;
@@ -184,36 +181,22 @@ export default function ListsPage() {
                     }
                   />
                 </Box>
-                <Box
-                  sx={{
-                    minWidth: 36,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'text.secondary',
-                  }}
-                >
-                  <DeleteSweepIcon fontSize="small" color="error" />
-                </Box>
+                <DeleteItemButton
+                  onDelete={() => openConfirm(list)}
+                  disabled={deleteMut.isPending}
+                />
               </ListItemButton>
             </SwipeableRow>
           </Box>
         ))}
       </List>
-      <Dialog open={!!confirmTarget} onClose={closeConfirm}>
-        <DialogTitle>Delete list</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Delete "{confirmTarget?.title || 'this list'}"?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeConfirm}>Cancel</Button>
-          <Button color="error" onClick={handleConfirmDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ListConfirmDialog
+        open={!!confirmTarget}
+        title="Delete list"
+        message={`Delete "${confirmTarget?.title || 'this list'}"?`}
+        onClose={closeConfirm}
+        onConfirm={handleConfirmDelete}
+      />
     </Box>
   );
 }
