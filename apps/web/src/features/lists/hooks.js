@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDeviceId } from "./deviceId";
 import { listKeys } from "./keys";
-import { createList, fetchLists, createListItem, fetchListItems, updateListItem } from "./api";
+import {
+    createList,
+    deleteList,
+    deleteListItem,
+    fetchLists,
+    createListItem,
+    fetchListItems,
+    updateListItem,
+} from "./api";
 
 // Lists
 export function useLists() {
@@ -20,6 +28,21 @@ export function useCreateList() {
         mutationFn: (title) => createList(title),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: listKeys.lists(deviceId) });
+        },
+    });
+}
+
+export function useDeleteList() {
+    const qc = useQueryClient();
+    const deviceId = getDeviceId();
+
+    return useMutation({
+        mutationFn: (listId) => deleteList(listId),
+        onSuccess: (_data, listId) => {
+            qc.invalidateQueries({ queryKey: listKeys.lists(deviceId) });
+            if (listId) {
+                qc.invalidateQueries({ queryKey: listKeys.items(deviceId, listId) });
+            }
         },
     });
 }
@@ -52,6 +75,18 @@ export function useUpdateListItem(listId) {
 
     return useMutation({
         mutationFn: ({ itemId, patch }) => updateListItem(itemId, patch),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: listKeys.items(deviceId, listId) });
+        },
+    });
+}
+
+export function useDeleteListItem(listId) {
+    const qc = useQueryClient();
+    const deviceId = getDeviceId();
+
+    return useMutation({
+        mutationFn: (itemId) => deleteListItem(itemId),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: listKeys.items(deviceId, listId) });
         },

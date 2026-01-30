@@ -1,4 +1,4 @@
-import { apiGet, apiPostJson, apiPatchJson } from "../../shared/api/client";
+import { apiDelete, apiGet, apiPatchJson, apiPostJson } from "../../shared/api/client";
 import { getDeviceId } from "./deviceId";
 
 // Lists
@@ -11,6 +11,14 @@ export async function fetchLists() {
 export async function createList(title) {
     const deviceId = getDeviceId();
     const data = await apiPostJson("/lists", { device_id: deviceId, title });
+    return data.list;
+}
+
+export async function deleteList(listId) {
+    const deviceId = getDeviceId();
+    const data = await apiDelete(
+        `/lists/${encodeURIComponent(listId)}?device_id=${encodeURIComponent(deviceId)}`
+    );
     return data.list;
 }
 
@@ -39,5 +47,13 @@ export async function updateListItem(itemId, patch) {
         device_id: deviceId,
         ...patch,
     });
+    return data.item;
+}
+
+export async function deleteListItem(itemId) {
+    const deviceId = getDeviceId();
+    const data = await apiDelete(
+        `/items/${encodeURIComponent(itemId)}?device_id=${encodeURIComponent(deviceId)}`
+    );
     return data.item;
 }
