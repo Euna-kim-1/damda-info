@@ -6,7 +6,7 @@ import theme from './providers/theme';
 import AppShell from '../shared/layout/AppShell';
 import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
-import Map from './pages/store/StoresMapView';
+import Map from './pages/store/StoresMap';
 import ListsPage from './pages/ListsPage';
 import ListDetailPage from './pages/ListDetailPage';
 

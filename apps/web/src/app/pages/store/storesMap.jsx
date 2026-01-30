@@ -5,7 +5,6 @@ import StoresMapView from './StoresMapView';
 
 export default function StoresMap() {
   const navigate = useNavigate();
-
   return (
     <ContainerSection sx={{ py: 2 }}>
       <Box
@@ -31,6 +30,7 @@ export default function StoresMap() {
         scrollWheelZoom
         fitPadding={[40, 40]}
         showPopups
+        enableMyLocationFeatures
       />
     </ContainerSection>
   );
