@@ -11,6 +11,7 @@ import ListsPage from './pages/ListsPage';
 import ListDetailPage from './pages/ListDetailPage';
 import CalculatorPage from './pages/CalculatorPage'
 
+
 const queryClient = new QueryClient();
 
 export default function App() {

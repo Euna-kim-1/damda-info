@@ -30,7 +30,9 @@ export default function AppShell({ children }) {
   const navigate = useNavigate();
 
   const current =
-    navItems.find((n) => location.pathname.startsWith(n.value))?.value ?? '/';
+    navItems.find(
+      (n) => n.value !== '/' && location.pathname.startsWith(n.value),
+    )?.value ?? '/';
 
   return (
     <Box

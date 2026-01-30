@@ -35,4 +35,29 @@ router.patch("/:itemId", async (req, res) => {
     }
 });
 
+/**
+ * DELETE /items/:itemId?device_id=...
+ */
+router.delete("/:itemId", async (req, res) => {
+    try {
+        const { itemId } = req.params;
+        const deviceId = req.query.device_id;
+        if (!deviceId) return res.status(400).json({ error: "device_id is required" });
+
+        const { data, error } = await supabase
+            .from("shopping_list_items")
+            .delete()
+            .eq("id", itemId)
+            .eq("device_id", deviceId)
+            .select("id, list_id, device_id, name, checked, note, created_at, updated_at")
+            .single();
+
+        if (error) throw error;
+        res.json({ ok: true, item: data });
+    } catch (err) {
+        console.error("DELETE /items/:itemId error:", err);
+        res.status(500).json({ ok: false, error: String(err?.message || err) });
+    }
+});
+
 export default router;

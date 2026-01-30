@@ -48,3 +48,10 @@ export async function apiPatchJson(path, body) {
     if (!r.ok) throw new Error(data?.error || JSON.stringify(data));
     return data;
 }
+
+export async function apiDelete(path) {
+    const r = await fetch(`${API_BASE}${path}`, { method: "DELETE" });
+    const data = await parseJsonSafe(r);
+    if (!r.ok) throw new Error(data?.error || JSON.stringify(data));
+    return data;
+}
