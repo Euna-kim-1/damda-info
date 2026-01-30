@@ -2,7 +2,7 @@ import { Box, Typography, Stack, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../shared/layout/ContainerSection';
 import PrimaryButton from '../../shared/ui/PrimaryButton';
-import { useReportsList } from '../../features/reports/hooks';
+import { useRecentReports } from '../../features/reports/hooks';
 import { ReportCard } from '../../shared/ui/reports';
 import StoresMapView from './store/StoresMapView';
 
@@ -14,11 +14,11 @@ function money(n) {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useReportsList({
+  const { data, isLoading, isError } = useRecentReports({
     page: 1,
     pageSize: 10,
   });
-  const items = data?.items ?? [];
+  const items = data?.reports ?? [];
 
   return (
     <ContainerSection sx={{ py: 2 }}>
@@ -59,9 +59,18 @@ export default function HomePage() {
 
       {/* ✅ Recent reports */}
       <Box sx={{ mt: 3 }}>
-        <Typography sx={{ fontWeight: 800, mb: 1.5 }}>
-          Recent reports
-        </Typography>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+          <Typography sx={{ fontWeight: 800 }}>Recent reports</Typography>
+
+          {/* 더 보기 */}
+          <Button
+            size="small"
+            onClick={() => navigate('/report')}
+            sx={{ textTransform: 'none' }}
+          >
+            View more
+          </Button>
+        </Stack>
 
         {isLoading && (
           <Typography sx={{ color: 'text.secondary' }}>Loading...</Typography>
@@ -73,25 +82,33 @@ export default function HomePage() {
           </Typography>
         )}
 
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-            gap: 1.5,
-            width: '100%',
-          }}
-        >
-          {items.map((r) => (
-            <ReportCard
-              key={r.id}
-              title={r.productName}
-              brand={r.brand}
-              storeName={r.storeName}
-              price={money(r.price)}
-              imageUrl={r.photoUrl} // ❗ 없으면 undefined → 자동으로 cart.png
-            />
-          ))}
-        </Box>
+        {!isLoading && !isError && items.length === 0 && (
+          <Typography sx={{ color: 'text.secondary' }}>
+            No reports yet.
+          </Typography>
+        )}
+
+        {!isLoading && !isError && (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+              gap: 1.5,
+              width: '100%',
+            }}
+          >
+            {items.slice(0, 2).map((r) => (
+              <ReportCard
+                key={r.id}
+                title={r.product_name}
+                storeName={r.store_name}
+                price={money(r.price)}
+                imageUrl={r.image_url}
+                reportedAt={r.reported_at}
+              />
+            ))}
+          </Box>
+        )}
       </Box>
 
       <Box sx={{ mt: 3 }}>

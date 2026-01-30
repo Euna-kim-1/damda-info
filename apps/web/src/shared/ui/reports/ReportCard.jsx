@@ -1,11 +1,20 @@
 import { Card, CardContent, CardMedia, Stack, Typography } from '@mui/material';
 
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('en-CA', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 export default function ReportCard({
   title,
-  brand,
   storeName,
   price,
   imageUrl,
+  reportedAt,
 }) {
   const fallbackImage = '/2.png';
 
@@ -31,7 +40,6 @@ export default function ReportCard({
           objectFit: 'contain',
         }}
         onError={(e) => {
-          // ✅ imageUrl이 있는데 깨졌을 때도 cart.png로 fallback
           e.currentTarget.src = fallbackImage;
         }}
       />
@@ -43,11 +51,11 @@ export default function ReportCard({
           </Typography>
 
           <Typography sx={{ color: 'text.secondary', fontSize: 13 }} noWrap>
-            {brand ? `Brand: ${brand}` : 'Brand: -'}
+            {storeName ? `Store: ${storeName}` : 'Store: -'}
           </Typography>
 
-          <Typography sx={{ color: 'text.secondary', fontSize: 13 }} noWrap>
-            {storeName ? `Store: ${storeName}` : 'Store: -'}
+          <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
+            Updated: {formatDate(reportedAt)}
           </Typography>
 
           <Typography sx={{ fontWeight: 900, mt: 0.5 }}>

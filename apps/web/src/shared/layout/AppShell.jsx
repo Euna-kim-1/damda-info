@@ -18,7 +18,7 @@ import CottageIcon from '@mui/icons-material/Cottage';
 const NAV_HEIGHT = 72;
 
 const navItems = [
-  { label: 'Upload', value: '/upload', icon: <LocalOfferRoundedIcon /> },
+  { label: 'Report', value: '/report', icon: <LocalOfferRoundedIcon /> },
   { label: 'Store', value: '/storesMap', icon: <StorefrontIcon /> },
   { label: 'Home', value: '/', icon: <CottageIcon /> },
   { label: 'Calculator', value: '/calculator', icon: <CalculateRoundedIcon /> },

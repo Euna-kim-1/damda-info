@@ -15,6 +15,53 @@ function normalizeName(name = "") {
         .trim();
 }
 
+router.get("/", async (req, res) => {
+    try {
+        const bucket = process.env.SUPABASE_BUCKET || "damda-images";
+        const limit = Math.min(Number(req.query.limit || 10), 50);
+
+        // price_reports + join (products, stores)
+        const { data, error } = await supabase
+            .from("price_reports")
+            .select(`
+          id,
+          price,
+          unit,
+          notes,
+          photo_path,
+          reported_at,
+          products:product_id ( id, name ),
+          stores:store_id ( id, name )
+        `)
+            .order("reported_at", { ascending: false })
+            .limit(limit);
+
+        if (error) throw error;
+
+        // photo_path -> public URL로 변환
+        const reports = (data || []).map((r) => {
+            const { data: pub } = supabase.storage.from(bucket).getPublicUrl(r.photo_path);
+
+            return {
+                id: r.id,
+                price: r.price,
+                unit: r.unit,
+                notes: r.notes,
+                reported_at: r.reported_at,
+                product_name: r.products?.name ?? null,
+                store_name: r.stores?.name ?? null,
+                image_url: pub?.publicUrl ?? null,
+            };
+        });
+
+        return res.json({ ok: true, reports });
+    } catch (err) {
+        console.error("REPORT GET error:", err);
+        return res.status(500).json({ ok: false, error: String(err?.message || err) });
+    }
+});
+
+
 router.post("/", upload.single("image"), async (req, res) => {
     try {
         const bucket = process.env.SUPABASE_BUCKET || "damda-images";
