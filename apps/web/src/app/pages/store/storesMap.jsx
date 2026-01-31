@@ -2,6 +2,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../../shared/layout/ContainerSection';
 import StoresMapView from './StoresMapView';
+import BackButton from '../../../shared/ui/buttons/BackButton';
 
 export default function StoresMap() {
   const navigate = useNavigate();
@@ -20,9 +21,7 @@ export default function StoresMap() {
         <Box>
           <Typography sx={{ fontWeight: 800, mb: 0.5 }}>Stores</Typography>
         </Box>
-        <Button variant="text" onClick={() => navigate(-1)}>
-          Back
-        </Button>
+        <BackButton onClick={() => navigate(-1)}>Back</BackButton>
       </Box>
 
       <StoresMapView

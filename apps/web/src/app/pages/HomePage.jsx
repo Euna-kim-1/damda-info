@@ -1,7 +1,7 @@
 import { Box, Typography, Stack, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../shared/layout/ContainerSection';
-import PrimaryButton from '../../shared/ui/PrimaryButton';
+import PrimaryButton from '../../shared/ui/buttons/PrimaryButton';
 import { useRecentReports } from '../../features/reports/hooks';
 import { ReportCard } from '../../shared/ui/reports';
 import StoresMapView from './store/StoresMapView';
@@ -59,7 +59,12 @@ export default function HomePage() {
 
       {/* ✅ Recent reports */}
       <Box sx={{ mt: 3 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 1.5 }}
+        >
           <Typography sx={{ fontWeight: 800 }}>Recent reports</Typography>
 
           {/* 더 보기 */}
@@ -92,7 +97,10 @@ export default function HomePage() {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+              },
               gap: 1.5,
               width: '100%',
             }}
