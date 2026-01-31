@@ -140,6 +140,14 @@ export default function ListsPage() {
           </Button>
         </Stack>
       </Box>
+      <Button
+        variant="outlined"
+        fullWidth
+        sx={{ mb: 2 }}
+        onClick={() => navigate('/calculator')}
+      >
+        Calculator
+      </Button>
 
       {isLoading && <Typography>Loading...</Typography>}
       {isError && (

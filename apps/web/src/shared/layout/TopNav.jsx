@@ -1,8 +1,11 @@
-import { AppBar, Toolbar, IconButton, Box, Avatar } from '@mui/material';
+import { AppBar, Toolbar, Box, Avatar } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import SearchInput from '../ui/SearchInput';
 import ContainerSection from './ContainerSection';
 
 export default function TopNav() {
+  const navigate = useNavigate();
+
   return (
     <AppBar
       position="sticky"
@@ -19,9 +22,11 @@ export default function TopNav() {
             component="img"
             src="/logo.png"
             alt="Damda"
+            onClick={() => navigate('/')}
             sx={{
               height: 60,
               width: 'auto',
+              cursor: 'pointer',
             }}
           />
 

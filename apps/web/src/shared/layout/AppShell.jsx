@@ -3,6 +3,7 @@ import {
   Paper,
   BottomNavigation,
   BottomNavigationAction,
+  Typography,
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -11,17 +12,43 @@ import TopNav from './TopNav';
 import ContainerSection from './ContainerSection';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
-import CalculateRoundedIcon from '@mui/icons-material/CalculateRounded';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import CottageIcon from '@mui/icons-material/Cottage';
 
 const NAV_HEIGHT = 72;
 
 const navItems = [
-  { label: 'Report', value: '/report', icon: <LocalOfferRoundedIcon /> },
-  { label: 'Store', value: '/storesMap', icon: <StorefrontIcon /> },
   { label: 'Home', value: '/', icon: <CottageIcon /> },
-  { label: 'Calculator', value: '/calculator', icon: <CalculateRoundedIcon /> },
+  { label: 'Report', value: '/report', icon: <LocalOfferRoundedIcon /> },
+  {
+    value: '/upload',
+    showLabel: false,
+    ariaLabel: 'Add',
+    icon: (
+      <Box
+        sx={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          bgcolor: 'primary.light',
+          display: 'grid',
+          placeItems: 'center',
+          boxShadow: 2,
+          transform: 'translateY(-6px)',
+        }}
+      >
+        <Typography
+          component="span"
+          aria-label="add"
+          fontSize={24}
+          color="white"
+        >
+          +
+        </Typography>
+      </Box>
+    ),
+  },
+  { label: 'Store', value: '/storesMap', icon: <StorefrontIcon /> },
   { label: 'List', value: '/lists', icon: <ListAltIcon /> },
 ];
 
@@ -30,8 +57,10 @@ export default function AppShell({ children }) {
   const navigate = useNavigate();
 
   const current =
-    navItems.find(
-      (n) => n.value !== '/' && location.pathname.startsWith(n.value),
+    navItems.find((n) =>
+      n.value === '/'
+        ? location.pathname === '/'
+        : location.pathname.startsWith(n.value),
     )?.value ?? '/';
 
   return (
@@ -81,6 +110,8 @@ export default function AppShell({ children }) {
                 label={item.label}
                 value={item.value}
                 icon={item.icon}
+                showLabel={item.showLabel}
+                aria-label={item.ariaLabel}
               />
             ))}
           </BottomNavigation>
