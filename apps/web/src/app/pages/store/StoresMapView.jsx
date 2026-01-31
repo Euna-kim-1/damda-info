@@ -23,9 +23,9 @@ import {
   createStoreMarkerIcons,
   getStoreMarkerIcon,
 } from '../../../shared/ui/store/StoreMapIcons';
-
+import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
+import NearMeIcon from '@mui/icons-material/NearMe';
 function FitToStores({ stores, padding }) {
-
   const map = useMap();
 
   useEffect(() => {
@@ -91,7 +91,10 @@ export default function StoresMapView({
       }),
     [],
   );
-  console.log('[StoresMapView] enableMyLocationFeatures =', enableMyLocationFeatures);
+  console.log(
+    '[StoresMapView] enableMyLocationFeatures =',
+    enableMyLocationFeatures,
+  );
   const mappableStores = useMemo(
     () =>
       (stores || []).filter(
@@ -185,9 +188,14 @@ export default function StoresMapView({
               gap: 0.75,
             }}
           >
-            <Button variant="contained" size="small" onClick={getMyLocation}>
+            <PrimaryButton
+              variantStyle="primary2"
+              size="small"
+              onClick={getMyLocation}
+              startIcon={<NearMeIcon fontSize="small" />}
+            >
               Use my location
-            </Button>
+            </PrimaryButton>
 
             {geoError && (
               <Box
@@ -251,29 +259,41 @@ export default function StoresMapView({
                       <Divider sx={{ mb: 1 }} />
 
                       <Stack spacing={0.5}>
-                        <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                        <Typography
+                          sx={{ fontSize: 11, color: 'text.secondary' }}
+                        >
                           Address
                         </Typography>
-                        <Typography sx={{ fontSize: 12.5 }}>{s.address}</Typography>
+                        <Typography sx={{ fontSize: 12.5 }}>
+                          {s.address}
+                        </Typography>
                       </Stack>
 
                       <Stack spacing={0.75}>
-                        <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                        <Typography
+                          sx={{ fontSize: 11, color: 'text.secondary' }}
+                        >
                           Opening Hours
                         </Typography>
                         {s.operation_time ? (
-                          <Typography sx={{ fontSize: 12.5, whiteSpace: 'pre-line' }}>
+                          <Typography
+                            sx={{ fontSize: 12.5, whiteSpace: 'pre-line' }}
+                          >
                             {s.operation_time}
                           </Typography>
                         ) : (
-                          <Typography sx={{ fontSize: 12.5, color: 'text.secondary' }}>
+                          <Typography
+                            sx={{ fontSize: 12.5, color: 'text.secondary' }}
+                          >
                             —
                           </Typography>
                         )}
 
                         {s.phone && (
                           <>
-                            <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                            <Typography
+                              sx={{ fontSize: 11, color: 'text.secondary' }}
+                            >
                               Contact Info
                             </Typography>
                             <Box

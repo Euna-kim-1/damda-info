@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Checkbox,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -14,9 +15,8 @@ import {
   Typography,
 } from '@mui/material';
 import BackButton from '../../../shared/ui/buttons/BackButton';
-import DeleteCheckedButton from '../../../shared/ui/buttons/DeleteCheckedButton';
 import DeleteItemButton from '../../../shared/ui/buttons/DeleteItemButton';
-import ResetCheckedButton from '../../../shared/ui/buttons/ResetCheckedButton';
+import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
 import ListConfirmDialog from './ListConfirmDialog';
 import {
   useCreateListItem,
@@ -25,6 +25,9 @@ import {
   useLists,
   useUpdateListItem,
 } from '../../../features/lists/hooks';
+import CalculateOutlinedIcon from '@mui/icons-material/CalculateOutlined';
+import DeleteSweepOutlinedIcon from '@mui/icons-material/DeleteSweepOutlined';
+import RestartAltOutlinedIcon from '@mui/icons-material/RestartAltOutlined';
 
 function SwipeableRow({ onSwipeDelete, disabled, children }) {
   const startXRef = useRef(0);
@@ -210,7 +213,20 @@ export default function ListDetailPage() {
       </Typography>
 
       <Box component="form" onSubmit={onAdd} sx={{ mb: 2 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <IconButton
+            type="button"
+            onClick={() => navigate('/calculator')}
+            aria-label="Calculator"
+            sx={{
+              color: 'secondary.dark',
+              border: '1px dotted',
+              width: 40,
+              height: 40,
+            }}
+          >
+            <CalculateOutlinedIcon fontSize="small" />
+          </IconButton>
           <TextField
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -218,22 +234,40 @@ export default function ListDetailPage() {
             size="small"
             fullWidth
           />
-          <Button type="submit" variant="contained" disabled={!canAdd}>
-            {createItemMut.isPending ? 'Adding...' : 'Add'}
-          </Button>
         </Stack>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!canAdd}
+          fullWidth
+          sx={{ mt: 1 }}
+        >
+          {createItemMut.isPending ? 'Adding...' : 'Add'}
+        </Button>
       </Box>
-      <Stack direction="row" spacing={1} sx={{ mb: 1, mt: -1 }}>
-        <DeleteCheckedButton
-          count={checkedItems.length}
-          onClick={openBulkConfirm}
-          disabled={checkedItems.length === 0}
-        />
-        <ResetCheckedButton
-          onClick={handleResetChecked}
-          disabled={checkedItems.length === 0 || updateItemMut.isPending}
-        />
-      </Stack>
+      {checkedItems.length >= 2 && (
+        <Stack direction="row" spacing={1} sx={{ mb: 1, mt: -1 }}>
+          <PrimaryButton
+            variantStyle="primary4"
+            count={checkedItems.length}
+            onClick={openBulkConfirm}
+            disabled={checkedItems.length === 0}
+            startIcon={<DeleteSweepOutlinedIcon fontSize="small" />}
+            sx={{ p: 1 }}
+          >
+            Delete checked ({checkedItems.length})
+          </PrimaryButton>
+          <PrimaryButton
+            variantStyle="primary4"
+            onClick={handleResetChecked}
+            disabled={checkedItems.length === 0 || updateItemMut.isPending}
+            startIcon={<RestartAltOutlinedIcon fontSize="small" />}
+            sx={{ p: 1 }}
+          >
+            Reset checked
+          </PrimaryButton>
+        </Stack>
+      )}
 
       {isLoading && <Typography>Loading...</Typography>}
       {isError && (

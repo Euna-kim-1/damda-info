@@ -7,7 +7,7 @@ const theme = createTheme({
       main: '#E3C04D', // yellow
       light: '#F2D77A',
       dark: '#C7A236',
-      contrastText: '#1A1407',
+      contrastText: '#2F3A1A',
     },
     secondary: {
       main: '#6E7B4F', // olive green

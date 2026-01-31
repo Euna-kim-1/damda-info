@@ -37,12 +37,7 @@ const navItems = [
           transform: 'translateY(-6px)',
         }}
       >
-        <Typography
-          component="span"
-          aria-label="add"
-          fontSize={24}
-          color="white"
-        >
+        <Typography component="span" aria-label="add" fontSize={24}>
           +
         </Typography>
       </Box>

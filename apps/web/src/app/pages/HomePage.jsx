@@ -5,7 +5,8 @@ import PrimaryButton from '../../shared/ui/buttons/PrimaryButton';
 import { useRecentReports } from '../../features/reports/hooks';
 import { ReportCard } from '../../shared/ui/reports';
 import StoresMapView from './store/StoresMapView';
-
+import AddIcon from '@mui/icons-material/Add';
+import AddHomeWorkOutlinedIcon from '@mui/icons-material/AddHomeWorkOutlined';
 function money(n) {
   const num = Number(n);
   if (Number.isNaN(num)) return '';
@@ -50,7 +51,10 @@ export default function HomePage() {
           </Typography>
 
           <Box>
-            <PrimaryButton onClick={() => navigate('/upload')}>
+            <PrimaryButton
+              variantStyle="primary3"
+              startIcon={<AddIcon fontSize="small" />}
+            >
               Share a price
             </PrimaryButton>
           </Box>
@@ -67,14 +71,12 @@ export default function HomePage() {
         >
           <Typography sx={{ fontWeight: 800 }}>Recent reports</Typography>
 
-          {/* 더 보기 */}
-          <Button
-            size="small"
+          <PrimaryButton
+            variantStyle="primary4"
             onClick={() => navigate('/report')}
-            sx={{ textTransform: 'none' }}
           >
             View more
-          </Button>
+          </PrimaryButton>
         </Stack>
 
         {isLoading && (
@@ -124,8 +126,9 @@ export default function HomePage() {
 
         <Box sx={{ position: 'relative' }}>
           <StoresMapView />
-          <Button
-            variant="contained"
+          <PrimaryButton
+            startIcon={<AddHomeWorkOutlinedIcon fontSize="small" />}
+            variantStyle="primary2"
             onClick={() => navigate('/storesMap')}
             sx={{
               position: 'absolute',
@@ -136,7 +139,7 @@ export default function HomePage() {
             }}
           >
             View store details
-          </Button>
+          </PrimaryButton>
         </Box>
       </Box>
     </ContainerSection>
