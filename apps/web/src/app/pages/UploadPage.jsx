@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -13,6 +14,10 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useNavigate } from 'react-router-dom';
@@ -21,13 +26,18 @@ import { Controller } from 'react-hook-form';
 
 export default function UploadPage() {
   const navigate = useNavigate();
+
+  const [successOpen, setSuccessOpen] = useState(false);
+
   const {
     previewUrl,
     ocrText,
-    loading,
+    loading, // ✅ OCR 로딩 상태
     stores,
     storesLoading,
     price,
+    setPrice,
+    priceCandidates,
     nameCandidates,
     productName,
     saveMsg,
@@ -44,7 +54,26 @@ export default function UploadPage() {
     uploadLoading,
     resetUpload,
     hasFile,
+    canUpload,
   } = useUploadReport();
+
+  // ✅ 업로드 성공 메시지 감지하면 성공 모달 열고 1.2초 후 이동
+  useEffect(() => {
+    if (!saveMsg) return;
+
+    const isSuccess =
+      saveMsg.toLowerCase().includes('complete') || saveMsg.startsWith('✅');
+
+    if (!isSuccess) return;
+
+    setSuccessOpen(true);
+
+    const t = setTimeout(() => {
+      navigate('/report');
+    }, 1200);
+
+    return () => clearTimeout(t);
+  }, [saveMsg, navigate]);
 
   return (
     <Box sx={{ maxWidth: 860, mx: 'auto', px: { xs: 1.5, sm: 2 }, py: 3 }}>
@@ -75,7 +104,7 @@ export default function UploadPage() {
                 <Button
                   variant="contained"
                   component="label"
-                  disabled={loading}
+                  disabled={loading || uploadLoading}
                 >
                   Choose photo
                   <input
@@ -86,22 +115,18 @@ export default function UploadPage() {
                     onChange={onPick}
                   />
                 </Button>
+
                 {hasFile && (
                   <Button
                     variant="text"
-                    onClick={resetUpload}
+                    onClick={() => {
+                      resetUpload();
+                      setSuccessOpen(false);
+                    }}
                     disabled={loading || uploadLoading}
                   >
                     Cancel
                   </Button>
-                )}
-                {loading && (
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <CircularProgress size={18} />
-                    <Typography sx={{ color: 'text.secondary' }}>
-                      Running OCR…
-                    </Typography>
-                  </Stack>
                 )}
               </Stack>
 
@@ -153,7 +178,7 @@ export default function UploadPage() {
 
                 <Stack spacing={1}>
                   {[
-                    ['OCR status', loading ? 'Running…' : 'Idle'],
+                    // ✅ OCR status 줄 제거 (모달로 대신 보여줌)
                     ['Price', price || '—'],
                     ['Final name', finalName || '—'],
                   ].map(([label, value]) => (
@@ -174,6 +199,27 @@ export default function UploadPage() {
                     </Stack>
                   ))}
                 </Stack>
+
+                {priceCandidates.length > 1 && (
+                  <>
+                    <Typography sx={{ fontWeight: 700, mt: 2, mb: 1 }}>
+                      Price candidates
+                    </Typography>
+
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {priceCandidates.map((p) => (
+                        <Chip
+                          key={p}
+                          label={p}
+                          onClick={() => setPrice(p)}
+                          color={p === price ? 'primary' : 'default'}
+                          variant={p === price ? 'filled' : 'outlined'}
+                          sx={{ fontWeight: 700 }}
+                        />
+                      ))}
+                    </Stack>
+                  </>
+                )}
 
                 <Typography sx={{ fontWeight: 700, mt: 2, mb: 1 }}>
                   Name candidates
@@ -213,15 +259,6 @@ export default function UploadPage() {
                       : ' '
                   }
                 />
-
-                <Box>
-                  <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
-                    Final name
-                  </Typography>
-                  <Typography sx={{ fontWeight: 800 }}>
-                    {finalName || '(none)'}
-                  </Typography>
-                </Box>
               </Stack>
             </Stack>
 
@@ -232,10 +269,7 @@ export default function UploadPage() {
                 name="storeName"
                 control={control}
                 render={({ field }) => (
-                  <FormControl
-                    fullWidth
-                    error={submitted && !!errors.storeName}
-                  >
+                  <FormControl fullWidth error={submitted && !!errors.storeName}>
                     <InputLabel id="store-label">Store</InputLabel>
                     <Select
                       {...field}
@@ -279,11 +313,12 @@ export default function UploadPage() {
                 <Button
                   variant="contained"
                   onClick={uploadReport}
-                  disabled={loading || uploadLoading}
+                  disabled={loading || uploadLoading || !canUpload}
                   sx={{ minWidth: 180 }}
                 >
                   {uploadLoading ? 'Uploading...' : 'Upload'}
                 </Button>
+
                 <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
                   {submitted
                     ? missingFile
@@ -295,12 +330,8 @@ export default function UploadPage() {
                 </Typography>
               </Stack>
 
-              {saveMsg && (
-                <Alert
-                  severity={saveMsg.startsWith('✅') ? 'success' : 'error'}
-                >
-                  {saveMsg}
-                </Alert>
+              {saveMsg && saveMsg.toLowerCase().includes('failed') && (
+                <Alert severity="error">{saveMsg}</Alert>
               )}
             </Stack>
           </Stack>
@@ -334,6 +365,38 @@ export default function UploadPage() {
           </Stack>
         </Paper>
       </Stack>
+
+      {/* ✅ OCR 로딩 모달: 사진 업로드하면 바로 중앙에 뜸 */}
+      <Dialog open={loading} onClose={() => { }}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Running OCR…</DialogTitle>
+        <DialogContent>
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1 }}>
+            <CircularProgress size={20} />
+            <Typography sx={{ color: 'text.secondary' }}>
+              Extracting price and name candidates…
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          {/* 일부러 닫기 버튼 없음: “진짜 진행중”을 확실히 보여주려고 */}
+        </DialogActions>
+      </Dialog>
+
+      {/* ✅ 업로드 성공 모달 */}
+      <Dialog open={successOpen} onClose={() => { }}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Upload complete</DialogTitle>
+        <DialogContent>
+          <Typography>{saveMsg || 'Upload complete! Redirecting…'}</Typography>
+          <Typography sx={{ color: 'text.secondary', fontSize: 12, mt: 1 }}>
+            Redirecting…
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={() => navigate('/report')}>
+            Go now
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

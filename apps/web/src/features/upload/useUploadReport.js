@@ -3,7 +3,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { extractBestPrice, extractNameCandidates } from './uploadUtils';
+import {
+  extractBestPrice,
+  extractNameCandidates,
+  extractPriceCandidates,
+} from './uploadUtils';
 import { apiGet, apiPostForm } from '../../shared/api/client';
 
 const formSchema = z
@@ -28,7 +32,10 @@ export function useUploadReport() {
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [ocrText, setOcrText] = useState('');
+
   const [price, setPrice] = useState('');
+  const [priceCandidates, setPriceCandidates] = useState([]);
+
   const [nameCandidates, setNameCandidates] = useState([]);
   const [saveMsg, setSaveMsg] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -93,15 +100,19 @@ export function useUploadReport() {
       form.append('image', file);
 
       const data = await apiPostForm('/ocr', form);
-
       const raw = data?.text || '';
-      const nextPrice = extractBestPrice(raw);
-      const candidates = extractNameCandidates(raw, nextPrice);
-      return { raw, nextPrice, candidates };
+
+      const prices = extractPriceCandidates(raw, 6);
+      const nextPrice = prices[0] || extractBestPrice(raw);
+      const candidates = extractNameCandidates(raw, nextPrice, 3);
+
+      return { raw, prices, nextPrice, candidates };
     },
-    onSuccess: ({ raw, nextPrice, candidates }) => {
+    onSuccess: ({ raw, prices, nextPrice, candidates }) => {
       setOcrText(raw);
+      setPriceCandidates(prices);
       setPrice(nextPrice);
+
       setNameCandidates(candidates);
       setValue('productName', candidates[0] || '', { shouldValidate: true });
     },
@@ -109,6 +120,7 @@ export function useUploadReport() {
       console.error(e);
       setOcrText('OCR failed. Check backend logs and the Network tab.');
       setPrice('');
+      setPriceCandidates([]);
       setNameCandidates([]);
       setValue('productName', '', { shouldValidate: true });
     },
@@ -121,17 +133,18 @@ export function useUploadReport() {
       form.append('storeName', values.storeName.trim());
       form.append('productName', (values.productName || '').trim());
       form.append('price', price);
+
       if (values.unit?.trim()) form.append('unit', values.unit.trim());
       if (values.notes?.trim()) form.append('notes', values.notes.trim());
 
       return apiPostForm('/report', form);
     },
     onSuccess: () => {
-      setSaveMsg('✅ Upload complete! (Storage + DB saved)');
+      setSaveMsg('✅ Upload complete! Redirecting…');
     },
     onError: (e) => {
       console.error(e);
-      setSaveMsg('❌ Upload failed. Check backend logs and the Network tab.');
+      setSaveMsg('❌ Upload failed. Please try again.');
     },
   });
 
@@ -144,7 +157,9 @@ export function useUploadReport() {
 
     setOcrText('');
     setPrice('');
+    setPriceCandidates([]);
     setNameCandidates([]);
+
     setValue('manualName', '');
     setValue('productName', '');
     setSaveMsg('');
@@ -165,9 +180,11 @@ export function useUploadReport() {
     setPreviewUrl('');
     setOcrText('');
     setPrice('');
+    setPriceCandidates([]);
     setNameCandidates([]);
     setSaveMsg('');
     setSubmitted(false);
+
     reset({
       storeName: storeName || '',
       productName: '',
@@ -179,8 +196,6 @@ export function useUploadReport() {
 
   const missingFile = !pickedFile;
   const missingPrice = !price;
-  const missingName = !finalName;
-  const missingStore = !storeName?.trim();
 
   const canUpload =
     !!pickedFile &&
@@ -194,7 +209,9 @@ export function useUploadReport() {
     async (values) => {
       setSubmitted(true);
       if (!canUpload) return;
+
       setSaveMsg('');
+
       await uploadMutation.mutateAsync({
         file: pickedFile,
         values: {
@@ -203,29 +220,32 @@ export function useUploadReport() {
         },
       });
     },
-    () => {
-      setSubmitted(true);
-    },
+    () => setSubmitted(true),
   );
 
   return {
     previewUrl,
     ocrText,
     loading: ocrMutation.isPending,
+
     stores: storesQuery.data || [],
     storesLoading: storesQuery.isLoading,
+
     price,
+    setPrice,
+    priceCandidates,
+
     nameCandidates,
     storeName,
+
     saveMsg,
     submitted,
     finalName,
 
     missingFile,
     missingPrice,
-    missingName,
-    missingStore,
     canUpload,
+
     productName,
     manualName,
     register,
