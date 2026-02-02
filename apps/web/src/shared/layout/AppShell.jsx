@@ -3,45 +3,29 @@ import {
   Paper,
   BottomNavigation,
   BottomNavigationAction,
-  Typography,
 } from '@mui/material';
+import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import TopNav from './TopNav';
 
 import ContainerSection from './ContainerSection';
+import FloatingActionMenu from './FloatingActionMenu';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
+import LocalMallOutlinedIcon from '@mui/icons-material/LocalMallOutlined';
 import ListAltIcon from '@mui/icons-material/ListAlt';
-import CottageIcon from '@mui/icons-material/Cottage';
+import CottageOutlinedIcon from '@mui/icons-material/CottageOutlined';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import CalculateIcon from '@mui/icons-material/Calculate';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
-const NAV_HEIGHT = 72;
+const NAV_HEIGHT = 64;
 
 const navItems = [
-  { label: 'Home', value: '/', icon: <CottageIcon /> },
-  { label: 'Report', value: '/report', icon: <LocalOfferRoundedIcon /> },
+  { label: 'Home', value: '/', icon: <CottageOutlinedIcon /> },
+  { label: 'Report', value: '/report', icon: <LocalMallOutlinedIcon /> },
   {
-    value: '/upload',
-    showLabel: false,
-    ariaLabel: 'Add',
-    icon: (
-      <Box
-        sx={{
-          width: 48,
-          height: 48,
-          borderRadius: '50%',
-          bgcolor: 'primary.light',
-          display: 'grid',
-          placeItems: 'center',
-          boxShadow: 2,
-          transform: 'translateY(-6px)',
-        }}
-      >
-        <Typography component="span" aria-label="add" fontSize={24}>
-          +
-        </Typography>
-      </Box>
-    ),
+    value: '__fab__',
   },
   { label: 'Store', value: '/storesMap', icon: <StorefrontIcon /> },
   { label: 'List', value: '/lists', icon: <ListAltIcon /> },
@@ -57,6 +41,39 @@ export default function AppShell({ children }) {
         ? location.pathname === '/'
         : location.pathname.startsWith(n.value),
     )?.value ?? '/';
+
+  const fabActions = useMemo(
+    () => [
+      {
+        label: 'Receipt',
+        angle: -140,
+        icon: <ReceiptLongIcon />,
+        color: 'secondary.light',
+        onClick: () => {
+          navigate('/profile');
+        },
+      },
+      {
+        label: 'Camera',
+        angle: -90,
+        icon: <PhotoCameraIcon />,
+        color: 'secondary.main',
+        onClick: () => {
+          navigate('/upload');
+        },
+      },
+      {
+        label: 'Calculator',
+        angle: -40,
+        icon: <CalculateIcon />,
+        color: 'secondary.light',
+        onClick: () => {
+          navigate('/calculator');
+        },
+      },
+    ],
+    [navigate],
+  );
 
   return (
     <Box
@@ -88,28 +105,45 @@ export default function AppShell({ children }) {
           bottom: 0,
           borderTop: '1px solid',
           borderColor: 'divider',
+          borderRadius: 0,
           pb: 'env(safe-area-inset-bottom)',
+          overflow: 'visible',
           zIndex: (theme) => theme.zIndex.appBar + 10,
         }}
       >
         <ContainerSection>
-          <BottomNavigation
-            value={current}
-            onChange={(e, next) => navigate(next)}
-            showLabels
-            sx={{ height: NAV_HEIGHT }}
-          >
-            {navItems.map((item) => (
-              <BottomNavigationAction
-                key={item.value}
-                label={item.label}
-                value={item.value}
-                icon={item.icon}
-                showLabel={item.showLabel}
-                aria-label={item.ariaLabel}
-              />
-            ))}
-          </BottomNavigation>
+          <Box sx={{ position: 'relative' }}>
+            <BottomNavigation
+              value={current}
+              onChange={(e, next) => {
+                if (next === '__fab__') return;
+                navigate(next);
+              }}
+              showLabels
+              sx={{
+                height: NAV_HEIGHT,
+                '& .MuiBottomNavigationAction-root.Mui-selected': {
+                  color: 'secondary.main',
+                },
+                '& .MuiBottomNavigationAction-root.Mui-selected svg': {
+                  color: 'secondary.main',
+                },
+              }}
+            >
+              {navItems.map((item) => (
+                <BottomNavigationAction
+                  key={item.value}
+                  label={item.label}
+                  value={item.value}
+                  icon={item.icon}
+                  showLabel={item.showLabel}
+                  aria-label={item.ariaLabel}
+                />
+              ))}
+            </BottomNavigation>
+
+            <FloatingActionMenu actions={fabActions} radius={92} />
+          </Box>
         </ContainerSection>
       </Paper>
     </Box>

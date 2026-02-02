@@ -18,7 +18,6 @@ import {
   useDeleteList,
   useLists,
 } from '../../../features/lists/hooks';
-import CalculateOutlinedIcon from '@mui/icons-material/CalculateOutlined';
 
 function SwipeableRow({ onSwipeDelete, disabled, children }) {
   const startXRef = useRef(0);
@@ -130,19 +129,6 @@ export default function ListsPage() {
     <Box sx={{ px: 2, py: 2, maxWidth: 720, mx: 'auto' }}>
       <Box component="form" onSubmit={onCreate} sx={{ mb: 2 }}>
         <Stack direction="row" spacing={1} alignItems="center">
-          <IconButton
-            type="button"
-            onClick={() => navigate('/calculator')}
-            aria-label="Calculator"
-            sx={{
-              color: 'secondary.dark',
-              border: '1px dotted',
-              width: 40,
-              height: 40,
-            }}
-          >
-            <CalculateOutlinedIcon fontSize="small" />
-          </IconButton>
           <TextField
             value={title}
             onChange={(e) => setTitle(e.target.value)}

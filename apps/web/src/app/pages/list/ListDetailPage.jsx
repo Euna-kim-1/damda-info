@@ -25,7 +25,6 @@ import {
   useLists,
   useUpdateListItem,
 } from '../../../features/lists/hooks';
-import CalculateOutlinedIcon from '@mui/icons-material/CalculateOutlined';
 import DeleteSweepOutlinedIcon from '@mui/icons-material/DeleteSweepOutlined';
 import RestartAltOutlinedIcon from '@mui/icons-material/RestartAltOutlined';
 
@@ -214,23 +213,10 @@ export default function ListDetailPage() {
 
       <Box component="form" onSubmit={onAdd} sx={{ mb: 2 }}>
         <Stack direction="row" spacing={1} alignItems="center">
-          <IconButton
-            type="button"
-            onClick={() => navigate('/calculator')}
-            aria-label="Calculator"
-            sx={{
-              color: 'secondary.dark',
-              border: '1px dotted',
-              width: 40,
-              height: 40,
-            }}
-          >
-            <CalculateOutlinedIcon fontSize="small" />
-          </IconButton>
           <TextField
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Add item… (e.g. green onion)"
+            placeholder="e.g. green onions, milk, bread..."
             size="small"
             fullWidth
           />
