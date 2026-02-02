@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
+  IconButton,
   List,
   ListItemButton,
   ListItemText,
@@ -127,7 +128,7 @@ export default function ListsPage() {
   return (
     <Box sx={{ px: 2, py: 2, maxWidth: 720, mx: 'auto' }}>
       <Box component="form" onSubmit={onCreate} sx={{ mb: 2 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <Stack direction="row" spacing={1} alignItems="center">
           <TextField
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -135,10 +136,16 @@ export default function ListsPage() {
             size="small"
             fullWidth
           />
-          <Button type="submit" variant="contained" disabled={!canCreate}>
-            {createMut.isPending ? 'Creating...' : 'Create'}
-          </Button>
         </Stack>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!canCreate}
+          fullWidth
+          sx={{ mt: 1 }}
+        >
+          {createMut.isPending ? 'Creating...' : 'Create'}
+        </Button>
       </Box>
 
       {isLoading && <Typography>Loading...</Typography>}

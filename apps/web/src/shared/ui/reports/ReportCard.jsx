@@ -22,7 +22,7 @@ export default function ReportCard({
     <Card
       sx={{
         display: 'flex',
-        borderRadius: 999,
+        borderRadius: 3,
         overflow: 'hidden',
         border: '1px solid',
         borderColor: 'divider',
@@ -44,22 +44,37 @@ export default function ReportCard({
         }}
       />
 
-      <CardContent sx={{ flex: '1 1 50%', minWidth: 0, py: 1.5 }}>
-        <Stack spacing={0.4} sx={{ minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 800 }} noWrap>
+      <CardContent sx={{ flex: '1 1 50%', minWidth: 0, py: 1.2 }}>
+        <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+          <Typography
+            variant="subtitle1"
+            fontWeight={600}
+            color="text.primary"
+            noWrap
+          >
             {title || '-'}
           </Typography>
 
-          <Typography sx={{ color: 'text.secondary', fontSize: 13 }} noWrap>
+          <Typography
+            variant="body1"
+            color="secondary.dark"
+            display="block"
+            noWrap
+          >
+            {price || ''}
+          </Typography>
+
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            display="block"
+            noWrap
+          >
             {storeName ? `Store: ${storeName}` : 'Store: -'}
           </Typography>
 
-          <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
+          <Typography variant="caption" color="text.secondary">
             Updated: {formatDate(reportedAt)}
-          </Typography>
-
-          <Typography sx={{ fontWeight: 900, mt: 0.5 }}>
-            {price || ''}
           </Typography>
         </Stack>
       </CardContent>

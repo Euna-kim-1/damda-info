@@ -19,10 +19,10 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useNavigate } from 'react-router-dom';
 import { useUploadReport } from '../../features/upload/useUploadReport';
 import { Controller } from 'react-hook-form';
+import BackButton from '../../shared/ui/buttons/BackButton';
 
 export default function UploadPage() {
   const navigate = useNavigate();
@@ -130,14 +130,7 @@ export default function UploadPage() {
                 )}
               </Stack>
 
-              <Button
-                variant="text"
-                size="small"
-                startIcon={<ArrowBackRoundedIcon />}
-                onClick={() => navigate(-1)}
-              >
-                Back
-              </Button>
+              <BackButton onClick={() => navigate(-1)} />
             </Stack>
 
             {previewUrl && (
