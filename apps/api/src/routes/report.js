@@ -1,27 +1,42 @@
 import express from "express";
 import multer from "multer";
 import { supabase } from "../lib/supabase.js";
-
+import { normalizeName } from "../../../web/src/shared/utils/normalizeText.js";
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-function normalizeName(name = "") {
-    return name
-        .toLowerCase()
-        .trim()
-        .replace(/[\u0000-\u001f]/g, "")
-        .replace(/[^a-z0-9\s]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-}
 
 router.get("/", async (req, res) => {
     try {
         const bucket = process.env.SUPABASE_BUCKET || "damda-images";
         const limit = Math.min(Number(req.query.limit || 10), 50);
+        const rawQ = String(req.query.q || "").trim();
 
-        // price_reports + join (products, stores)
-        const { data, error } = await supabase
+        // if q is provided, find product_id in products
+        let productIds = null;
+
+        if (rawQ) {
+            const nq = normalizeName(rawQ); // "wheat noodle" -> "wheat noodle"
+            if (!nq) return res.json({ ok: true, reports: [] });
+
+            const { data: prod, error: prodErr } = await supabase
+                .from("products")
+                .select("id")
+                .ilike("normalized_name", `%${nq}%`)
+                .limit(200);
+
+            if (prodErr) throw prodErr;
+
+            productIds = (prod || []).map((p) => p.id);
+
+            // if no search results, return empty results
+            if (productIds.length === 0) {
+                return res.json({ ok: true, reports: [] });
+            }
+        }
+
+        // get price_reports + join
+        let query = supabase
             .from("price_reports")
             .select(`
           id,
@@ -36,11 +51,18 @@ router.get("/", async (req, res) => {
             .order("reported_at", { ascending: false })
             .limit(limit);
 
+        // filter by product_id
+        if (productIds) {
+            query = query.in("product_id", productIds);
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
 
-        // photo_path -> public URL로 변환
         const reports = (data || []).map((r) => {
-            const { data: pub } = supabase.storage.from(bucket).getPublicUrl(r.photo_path);
+            const { data: pub } = supabase.storage
+                .from(bucket)
+                .getPublicUrl(r.photo_path);
 
             return {
                 id: r.id,

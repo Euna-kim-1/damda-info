@@ -1,7 +1,7 @@
 import { TextField, InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
-export default function SearchInput({ value, onChange, placeholder }) {
+export default function SearchInput({ value, onChange, onSubmit, placeholder }) {
   return (
     <TextField
       value={value || ''}
@@ -9,6 +9,9 @@ export default function SearchInput({ value, onChange, placeholder }) {
       placeholder={placeholder}
       size="small"
       fullWidth
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onSubmit?.();
+      }}
       sx={{
         '& .MuiOutlinedInput-root': {
           bgcolor: 'background.default',
