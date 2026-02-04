@@ -26,20 +26,28 @@ import BackButton from '../../shared/ui/buttons/BackButton';
 
 export default function UploadPage() {
   const navigate = useNavigate();
-
   const [successOpen, setSuccessOpen] = useState(false);
 
   const {
     previewUrl,
     ocrText,
-    loading, // ✅ OCR 로딩 상태
+    loading,
     stores,
     storesLoading,
+
+    // single-item (existing)
     price,
     setPrice,
     priceCandidates,
     nameCandidates,
     productName,
+
+    // receipt (new)
+    receiptItems,
+    isReceipt,
+    selectedReceiptIndex,
+    selectReceiptItem,
+
     saveMsg,
     submitted,
     finalName,
@@ -57,7 +65,6 @@ export default function UploadPage() {
     canUpload,
   } = useUploadReport();
 
-  // ✅ 업로드 성공 메시지 감지하면 성공 모달 열고 1.2초 후 이동
   useEffect(() => {
     if (!saveMsg) return;
 
@@ -78,6 +85,7 @@ export default function UploadPage() {
   return (
     <Box sx={{ maxWidth: 860, mx: 'auto', px: { xs: 1.5, sm: 2 }, py: 3 }}>
       <Stack spacing={2.5}>
+        {/* Pick / preview */}
         <Paper
           sx={{
             p: 2.5,
@@ -95,17 +103,8 @@ export default function UploadPage() {
               alignItems="center"
               justifyContent="space-between"
             >
-              <Stack
-                direction="row"
-                spacing={1.5}
-                alignItems="center"
-                flexWrap="wrap"
-              >
-                <Button
-                  variant="contained"
-                  component="label"
-                  disabled={loading || uploadLoading}
-                >
+              <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+                <Button variant="contained" component="label" disabled={loading || uploadLoading}>
                   Choose photo
                   <input
                     type="file"
@@ -152,6 +151,7 @@ export default function UploadPage() {
           </Stack>
         </Paper>
 
+        {/* Extracted + candidates */}
         <Paper
           sx={{
             p: 2.5,
@@ -165,13 +165,10 @@ export default function UploadPage() {
           <Stack spacing={2.5}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ fontWeight: 800, mb: 1 }}>
-                  Extracted
-                </Typography>
+                <Typography sx={{ fontWeight: 800, mb: 1 }}>Extracted</Typography>
 
                 <Stack spacing={1}>
                   {[
-                    // ✅ OCR status 줄 제거 (모달로 대신 보여줌)
                     ['Price', price || '—'],
                     ['Final name', finalName || '—'],
                   ].map(([label, value]) => (
@@ -185,14 +182,65 @@ export default function UploadPage() {
                         py: 0.75,
                       }}
                     >
-                      <Typography sx={{ color: 'text.secondary' }}>
-                        {label}
-                      </Typography>
+                      <Typography sx={{ color: 'text.secondary' }}>{label}</Typography>
                       <Typography sx={{ fontWeight: 700 }}>{value}</Typography>
                     </Stack>
                   ))}
                 </Stack>
 
+                {/* Receipt items list (only when receipt) */}
+                {isReceipt && receiptItems.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography sx={{ fontWeight: 800, mb: 1 }}>
+                      Receipt items ({receiptItems.length})
+                    </Typography>
+
+                    <Stack spacing={1.25}>
+                      {receiptItems.map((it, idx) => {
+                        const selected = idx === selectedReceiptIndex;
+                        return (
+                          <Paper
+                            key={`${it.name}-${it.price}-${idx}`}
+                            onClick={() => selectReceiptItem(idx)}
+                            role="button"
+                            tabIndex={0}
+                            sx={{
+                              p: 1.5,
+                              borderRadius: 3,
+                              cursor: 'pointer',
+                              border: '1px solid',
+                              borderColor: selected ? 'primary.main' : 'divider',
+                              boxShadow: selected ? 3 : 1,
+                            }}
+                          >
+                            <Stack direction="row" justifyContent="space-between" spacing={2}>
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography sx={{ fontWeight: 800 }} noWrap>
+                                  {it.name}
+                                </Typography>
+                                {it.detail ? (
+                                  <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
+                                    {it.detail}
+                                  </Typography>
+                                ) : null}
+                              </Box>
+
+                              <Typography sx={{ fontWeight: 800 }}>
+                                {it.price_display}
+                              </Typography>
+                            </Stack>
+                          </Paper>
+                        );
+                      })}
+                    </Stack>
+
+                    <Typography sx={{ color: 'text.secondary', fontSize: 12, mt: 1 }}>
+                      Click an item to select which one you want to upload (for now).
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Keep existing candidates UI (works for both) */}
                 {priceCandidates.length > 1 && (
                   <>
                     <Typography sx={{ fontWeight: 700, mt: 2, mb: 1 }}>
@@ -217,19 +265,16 @@ export default function UploadPage() {
                 <Typography sx={{ fontWeight: 700, mt: 2, mb: 1 }}>
                   Name candidates
                 </Typography>
+
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {nameCandidates.length === 0 ? (
-                    <Typography sx={{ color: 'text.secondary' }}>
-                      (no candidates)
-                    </Typography>
+                    <Typography sx={{ color: 'text.secondary' }}>(no candidates)</Typography>
                   ) : (
                     nameCandidates.map((c) => (
                       <Chip
                         key={c}
                         label={c}
-                        onClick={() =>
-                          setValue('productName', c, { shouldValidate: true })
-                        }
+                        onClick={() => setValue('productName', c, { shouldValidate: true })}
                         color={c === productName ? 'primary' : 'default'}
                         variant={c === productName ? 'filled' : 'outlined'}
                         sx={{ fontWeight: 700 }}
@@ -247,9 +292,7 @@ export default function UploadPage() {
                   fullWidth
                   error={submitted && !!errors.manualName}
                   helperText={
-                    submitted && errors.manualName
-                      ? errors.manualName.message
-                      : ' '
+                    submitted && errors.manualName ? errors.manualName.message : ' '
                   }
                 />
               </Stack>
@@ -298,11 +341,7 @@ export default function UploadPage() {
                 fullWidth
               />
 
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1.5}
-                alignItems="center"
-              >
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="center">
                 <Button
                   variant="contained"
                   onClick={uploadReport}
@@ -330,6 +369,7 @@ export default function UploadPage() {
           </Stack>
         </Paper>
 
+        {/* Raw OCR */}
         <Paper
           sx={{
             p: 2.5,
@@ -349,9 +389,7 @@ export default function UploadPage() {
               minRows={10}
               InputProps={{
                 readOnly: true,
-                sx: {
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                },
+                sx: { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' },
               }}
               fullWidth
             />
@@ -359,7 +397,7 @@ export default function UploadPage() {
         </Paper>
       </Stack>
 
-      {/* ✅ OCR 로딩 모달: 사진 업로드하면 바로 중앙에 뜸 */}
+      {/* OCR modal */}
       <Dialog open={loading} onClose={() => { }}>
         <DialogTitle sx={{ fontWeight: 800 }}>Running OCR…</DialogTitle>
         <DialogContent>
@@ -370,12 +408,10 @@ export default function UploadPage() {
             </Typography>
           </Stack>
         </DialogContent>
-        <DialogActions>
-          {/* 일부러 닫기 버튼 없음: “진짜 진행중”을 확실히 보여주려고 */}
-        </DialogActions>
+        <DialogActions />
       </Dialog>
 
-      {/* ✅ 업로드 성공 모달 */}
+      {/* Success modal */}
       <Dialog open={successOpen} onClose={() => { }}>
         <DialogTitle sx={{ fontWeight: 800 }}>Upload complete</DialogTitle>
         <DialogContent>

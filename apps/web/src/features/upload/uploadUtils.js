@@ -1,4 +1,4 @@
-
+// ===== 기존 코드 그대로 유지 =====
 const toProductNameSafe = (s) =>
   s
     .replace(/[^A-Za-z0-9\s()\/\-\.&']/g, '')
@@ -13,8 +13,8 @@ const isMostlyNumbers = (s) => {
 };
 
 const looksLikeDateOrCode = (s) => {
-  if (/\b20\d{2}[./-]\d{1,2}[./-]\d{1,2}\b/.test(s)) return true; // 2025.07.18
-  if (/\b\d{8,}\b/.test(s)) return true; // long numeric (barcode)
+  if (/\b20\d{2}[./-]\d{1,2}[./-]\d{1,2}\b/.test(s)) return true;
+  if (/\b\d{8,}\b/.test(s)) return true;
   if (/\b(lot|expiry|exp|best before|bb)\b/i.test(s)) return true;
   return false;
 };
@@ -40,73 +40,39 @@ function scoreName(s) {
   score += Math.min(s.length, 30);
 
   if (productKeywords.test(s)) score += 10;
-
   if (sloganText.test(s)) score -= 10;
-
   if (words <= 1) score -= 4;
 
   return score;
 }
 
 export function extractPriceCandidates(raw, limit = 6) {
-  const lines = raw
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
+  const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
   const candidates = [];
 
   for (const line of lines) {
     const matches = [
       ...line.matchAll(
-        /(\$?\s*\d{1,3}(?:[,\s]\d{3})*(?:\.\d{2})|\$?\s*\d+\.\d{2})/g,
+        /(\$?\s*\d{1,3}(?:[,\s]\d{3})*(?:\.\d{2})|\$?\s*\d+\.\d{2})/g
       ),
     ];
     for (const m of matches)
       candidates.push({ token: m[1].replace(/\s/g, ''), line });
   }
 
-  if (candidates.length === 0) {
-    for (const line of lines) {
-      const matches = [
-        ...line.matchAll(/(\$\s*\d{1,3}(?:[,\s]\d{3})*|\$\s*\d+)/g),
-      ];
-      for (const m of matches)
-        candidates.push({ token: m[1].replace(/\s/g, ''), line });
-    }
-  }
-
-  const filtered = candidates.filter(({ token, line }) => {
-    const t = token.replace('$', '');
-    const num = Number(t.replace(/,/g, ''));
-    if (!Number.isFinite(num) || num <= 0 || num > 9999) return false;
-    if (/\b20\d{2}\.\d{2}\.\d{2}\b/.test(line)) return false;
-    if (/\b(ml|mL|l|L|g|kg)\b/.test(line)) return false;
-    if (/%/.test(line)) return false;
-    return true;
+  const filtered = candidates.filter(({ token }) => {
+    const num = Number(token.replace('$', '').replace(/,/g, ''));
+    return Number.isFinite(num) && num > 0 && num < 9999;
   });
-
-  if (filtered.length === 0) return [];
-
-  const scored = filtered.map(({ token, line }) => {
-    let score = 0;
-    if (token.includes('$')) score += 5;
-    if (/\.\d{2}$/.test(token)) score += 4;
-    if (line.length <= 20) score += 2;
-    return { token, score };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
 
   const uniq = [];
   const seen = new Set();
 
-  for (const s of scored) {
-    const t = s.token.replace(/\s/g, '');
-    const withDollar = t.startsWith('$') ? t : `$${t}`;
-    const key = withDollar.replace(/,/g, '');
-    if (seen.has(key)) continue;
-    seen.add(key);
-    uniq.push(withDollar);
+  for (const c of filtered) {
+    const val = c.token.startsWith('$') ? c.token : `$${c.token}`;
+    if (seen.has(val)) continue;
+    seen.add(val);
+    uniq.push(val);
     if (uniq.length >= limit) break;
   }
 
@@ -114,8 +80,7 @@ export function extractPriceCandidates(raw, limit = 6) {
 }
 
 export function extractBestPrice(raw) {
-  const list = extractPriceCandidates(raw, 1);
-  return list[0] || '';
+  return extractPriceCandidates(raw, 1)[0] || '';
 }
 
 function pickNameCandidatesFrom(lines, limit) {
@@ -127,10 +92,7 @@ function pickNameCandidatesFrom(lines, limit) {
     .filter((l) => !badText.test(l))
     .filter((l) => !looksLikeDateOrCode(l))
     .filter((l) => !isMostlyNumbers(l))
-    .filter((l) => {
-      const letters = (l.match(/[A-Za-z]/g) || []).length;
-      return letters >= 2 && l.length >= 4 && l.length <= 45;
-    });
+    .filter((l) => l.length >= 4 && l.length <= 45);
 
   const uniq = Array.from(new Set(cleaned));
   uniq.sort((a, b) => scoreName(b) - scoreName(a));
@@ -138,26 +100,70 @@ function pickNameCandidatesFrom(lines, limit) {
 }
 
 export function extractNameCandidates(raw, bestPrice, limit = 3) {
-  const lines = raw
-    .split('\n')
+  const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+  return pickNameCandidatesFrom(lines, limit);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// ✅ NEW: Receipt Parser
+export function parseReceiptItems(rawText = '') {
+  const lines = rawText
+    .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
 
-  const priceNeedle = (bestPrice || '').replace(/\s/g, '').replace('$', '');
-  let priceIdx = -1;
+  const bannedWords = [
+    'tel', 'gst', 'date', 'cashier', 'stn',
+    'sub-total', 'subtotal', 'total', 'total due',
+    'credit', 'visa', 'paid', 'change', 'savings',
+    'on sale', 'reg.', 'multi', '@', 'ea'
+  ];
 
-  if (priceNeedle) {
-    priceIdx = lines.findIndex((l) =>
-      l.replace(/\s/g, '').replace('$', '').includes(priceNeedle),
-    );
+  const isBanned = (s) => {
+    const t = s.toLowerCase();
+    return bannedWords.some((w) => t.includes(w));
+  };
+
+  const isPrice = (s) => /^\$?\d+\.\d{2}$/.test(s);
+
+  const cutIndex = lines.findIndex((l) =>
+    l.toLowerCase().includes('sub-total')
+  );
+
+  const itemLines = cutIndex >= 0 ? lines.slice(0, cutIndex) : lines;
+
+  const items = [];
+  let buffer = [];
+
+  const buildName = () => {
+    const picked = [];
+    for (let i = buffer.length - 1; i >= 0; i--) {
+      const s = buffer[i];
+      if (isBanned(s)) continue;
+      if (!/[A-Za-z]/.test(s)) continue;
+      picked.unshift(s);
+      if (picked.length >= 2) break;
+    }
+    return picked.join(' ').trim();
+  };
+
+  for (const line of itemLines) {
+    if (isPrice(line)) {
+      const name = buildName();
+      const price = Number(line.replace('$', ''));
+      if (name && price) items.push({ name, price });
+      buffer = [];
+      continue;
+    }
+
+    if (!isBanned(line)) {
+      buffer.push(line);
+      if (buffer.length > 4) buffer.shift();
+    }
   }
 
-  const start = Math.max(0, priceIdx >= 0 ? priceIdx - 6 : 0);
-  const end = Math.min(lines.length, priceIdx >= 0 ? priceIdx + 6 : lines.length);
-  const near = lines.slice(start, end);
-
-  const nearPick = pickNameCandidatesFrom(near, limit);
-  if (nearPick.length > 0) return nearPick;
-
-  return pickNameCandidatesFrom(lines, limit);
+  return items;
 }
