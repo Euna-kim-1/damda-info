@@ -1,5 +1,10 @@
-export const normalizeStoreName = (name = '') =>
-  name
+export function normalizeName(name = "") {
+  return name
     .toLowerCase()
-    .replace(/\s+/g, '')
-    .replace(/[^a-z0-9가-힣]/g, '');
+    .trim()
+    .replace(/[\u0000-\u001f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/[^a-z0-9가-힣-]/g, "")
+    .trim();
+}

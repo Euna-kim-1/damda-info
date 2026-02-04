@@ -1,4 +1,5 @@
 import { Box, Button, Typography } from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
 import { useRecentReports } from '../../features/reports/hooks';
 
 function formatDate(dateStr) {
@@ -11,14 +12,20 @@ function formatDate(dateStr) {
 }
 
 export default function ReportPage() {
-  const { data, isLoading, isError, refetch } = useRecentReports({ limit: 10 });
+  const [params] = useSearchParams();
+  const q = (params.get('q') || '').trim();
+
+  const { data, isLoading, isError, refetch } = useRecentReports({
+    limit: 10,
+    q: q || undefined,
+  });
 
   const reports = data?.reports ?? [];
 
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="subtitle1" sx={{ mb: 1 }}>
-        Recent reports
+        {q ? `Results for "${q}"` : 'Recent reports'}
       </Typography>
 
       {isLoading && <Typography>Loading...</Typography>}
@@ -35,7 +42,9 @@ export default function ReportPage() {
       )}
 
       {!isLoading && !isError && reports.length === 0 && (
-        <Typography color="text.secondary">(No reports yet)</Typography>
+        <Typography color="text.secondary">
+          {q ? '(No results)' : '(No reports yet)'}
+        </Typography>
       )}
 
       {!isLoading &&
@@ -44,7 +53,7 @@ export default function ReportPage() {
           <Box
             key={r.id}
             sx={{
-              position: 'relative', // ✅ 기준점
+              position: 'relative',
               display: 'flex',
               gap: 2,
               mb: 2,
@@ -58,17 +67,12 @@ export default function ReportPage() {
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 12,
-                }}
+                sx={{ position: 'absolute', top: 8, right: 12 }}
               >
                 Updated: {formatDate(r.reported_at)}
               </Typography>
             )}
 
-            {/* Thumbnail */}
             <Box
               component="img"
               src={r.image_url}
@@ -82,30 +86,16 @@ export default function ReportPage() {
               }}
             />
 
-            {/* Info */}
             <Box sx={{ flex: 1, pr: 6 }}>
-              <Typography
-                variant="subtitle1"
-                fontWeight={600}
-                color="text.primary"
-              >
+              <Typography variant="subtitle1" fontWeight={600} color="text.primary">
                 {r.product_name ?? '(No name)'}
               </Typography>
 
-              <Typography
-                variant="subtitle2"
-                color="secondary.dark"
-                display="block"
-              >
+              <Typography variant="subtitle2" color="secondary.dark" display="block">
                 {r.price != null ? `$${Number(r.price).toFixed(2)}` : '—'}
               </Typography>
 
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                sx={{ mt: 1 }}
-              >
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
                 Store: {r.store_name ?? '—'}
               </Typography>
             </Box>

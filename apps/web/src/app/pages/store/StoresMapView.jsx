@@ -91,10 +91,10 @@ export default function StoresMapView({
       }),
     [],
   );
-  console.log(
-    '[StoresMapView] enableMyLocationFeatures =',
-    enableMyLocationFeatures,
-  );
+  // console.log(
+  //   '[StoresMapView] enableMyLocationFeatures =',
+  //   enableMyLocationFeatures,
+  // );
   const mappableStores = useMemo(
     () =>
       (stores || []).filter(

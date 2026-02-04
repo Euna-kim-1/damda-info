@@ -2,7 +2,7 @@ import React from 'react';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import { normalizeStoreName } from '../../utils/normalizeText';
+import { normalizeName } from '../../utils/normalizeText';
 
 const grocerySvg = (color) =>
   renderToStaticMarkup(
@@ -31,7 +31,7 @@ export const createStoreMarkerIcons = () => ({
 });
 
 export const getStoreMarkerIcon = (storeName, icons) => {
-  const normalized = normalizeStoreName(storeName || '');
+  const normalized = normalizeName(storeName || '');
 
   if (
     normalized.includes('이마트') ||
