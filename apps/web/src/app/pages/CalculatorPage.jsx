@@ -245,10 +245,10 @@ export default function CalculatorPage() {
             {history.length === 0 ? (
               <Box
                 component="img"
-                src="/empty.png"
+                src="/13.png"
                 alt="Result"
                 sx={{
-                  height: { xs: 200, md: 350 },
+                  height: { xs: 250, md: 350 },
                   width: 'auto',
                   objectFit: 'contain',
                   display: 'block',
