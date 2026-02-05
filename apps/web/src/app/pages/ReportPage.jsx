@@ -1,6 +1,7 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { useRecentReports } from '../../features/reports/hooks';
+import ContainerSection from '../../shared/layout/ContainerSection';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -23,7 +24,7 @@ export default function ReportPage() {
   const reports = data?.reports ?? [];
 
   return (
-    <Box sx={{ p: 2 }}>
+    <ContainerSection sx={{ py: 2 }}>
       <Typography variant="subtitle1" sx={{ mb: 1 }}>
         {q ? `Results for "${q}"` : 'Recent reports'}
       </Typography>
@@ -86,21 +87,34 @@ export default function ReportPage() {
               }}
             />
 
-            <Box sx={{ flex: 1, pr: 6 }}>
-              <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+            <Box sx={{ flex: 1, pr: 6, pt: { xs: 1.3 } }}>
+              <Typography
+                variant="subtitle1"
+                fontWeight={600}
+                color="text.primary"
+              >
                 {r.product_name ?? '(No name)'}
               </Typography>
 
-              <Typography variant="subtitle2" color="secondary.dark" display="block">
+              <Typography
+                variant="subtitle2"
+                color="secondary.dark"
+                display="block"
+              >
                 {r.price != null ? `$${Number(r.price).toFixed(2)}` : '—'}
               </Typography>
 
-              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                sx={{ mt: 1 }}
+              >
                 Store: {r.store_name ?? '—'}
               </Typography>
             </Box>
           </Box>
         ))}
-    </Box>
+    </ContainerSection>
   );
 }
