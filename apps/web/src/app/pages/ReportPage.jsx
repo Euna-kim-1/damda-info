@@ -25,7 +25,7 @@ export default function ReportPage() {
 
   return (
     <ContainerSection sx={{ py: 2 }}>
-      <Typography variant="subtitle1" sx={{ mb: 1 }}>
+      <Typography variant="overline" sx={{ mb: 1 }}>
         {q ? `Results for "${q}"` : 'Recent reports'}
       </Typography>
 
@@ -43,9 +43,36 @@ export default function ReportPage() {
       )}
 
       {!isLoading && !isError && reports.length === 0 && (
-        <Typography color="text.secondary">
-          {q ? '(No results)' : '(No reports yet)'}
-        </Typography>
+        <Box
+          sx={{
+            mt: 3,
+            mb: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 1,
+          }}
+        >
+          <Box
+            component="img"
+            src="/no-result.png"
+            alt="No results"
+            sx={{
+              width: { xs: 250, sm: 350 },
+              height: 'auto',
+              opacity: 0.9,
+            }}
+          />
+          <Typography variant="subtitle1" fontWeight={600}>
+            There are no results.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {q
+              ? 'Try a different keyword or adjust your search.'
+              : 'Reports will appear here once available.'}
+          </Typography>
+        </Box>
       )}
 
       {!isLoading &&
