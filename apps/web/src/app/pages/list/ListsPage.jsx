@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
-  IconButton,
   List,
   ListItemButton,
   ListItemText,
@@ -30,25 +29,23 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
   const threshold = -80;
   const maxOffset = -120;
 
-  function handlePointerDown(e) {
+  function startGesture(clientX) {
     if (disabled) return;
-    if (e.pointerType && e.pointerType !== 'touch') return;
     draggingRef.current = true;
     setIsDragging(true);
-    startXRef.current = e.clientX;
+    startXRef.current = clientX;
     deltaRef.current = 0;
-    if (e.currentTarget.setPointerCapture) {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
   }
 
-  function handlePointerMove(e) {
+  function moveGesture(clientX, e) {
     if (!draggingRef.current || disabled) return;
-    if (e.pointerType && e.pointerType !== 'touch') return;
-    const delta = e.clientX - startXRef.current;
+    const delta = clientX - startXRef.current;
     if (delta > 0) return;
     deltaRef.current = delta;
     setOffset(Math.max(delta, maxOffset));
+    if (Math.abs(delta) > 6) {
+      e?.preventDefault?.();
+    }
   }
 
   function finishGesture() {
@@ -66,13 +63,36 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
     if (delta < threshold && !disabled) onSwipeDelete?.();
   }
 
+  function handlePointerDown(e) {
+    if (e.pointerType && e.pointerType !== 'touch') return;
+    startGesture(e.clientX, e);
+    if (e.currentTarget.setPointerCapture) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+  }
+
+  function handlePointerMove(e) {
+    if (e.pointerType && e.pointerType !== 'touch') return;
+    moveGesture(e.clientX, e);
+  }
+
   return (
     <Box
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={finishGesture}
       onPointerCancel={finishGesture}
-      onPointerLeave={finishGesture}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse') finishGesture();
+      }}
+      onTouchStart={(e) => {
+        if (e.touches?.[0]) startGesture(e.touches[0].clientX, e);
+      }}
+      onTouchMove={(e) => {
+        if (e.touches?.[0]) moveGesture(e.touches[0].clientX, e);
+      }}
+      onTouchEnd={finishGesture}
+      onTouchCancel={finishGesture}
       onClickCapture={(e) => {
         if (suppressClickRef.current) {
           e.preventDefault();
@@ -84,6 +104,7 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
         transform: `translateX(${offset}px)`,
         transition: isDragging ? 'none' : 'transform 120ms ease-out',
         touchAction: 'pan-y',
+        userSelect: 'none',
       }}
     >
       {children}
