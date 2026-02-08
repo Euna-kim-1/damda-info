@@ -7,6 +7,7 @@ import {
   extractBestPrice,
   extractNameCandidates,
   extractPriceCandidates,
+  parseReceiptItems,
 } from './uploadUtils';
 import { apiGet, apiPostForm } from '../../shared/api/client';
 
@@ -29,16 +30,21 @@ const formSchema = z
   });
 
 export function useUploadReport() {
+  // ✅ NEW: mode
+  const [mode, setMode] = useState('single'); // 'single' | 'receipt'
+
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [ocrText, setOcrText] = useState('');
 
   const [price, setPrice] = useState('');
   const [priceCandidates, setPriceCandidates] = useState([]);
-
   const [nameCandidates, setNameCandidates] = useState([]);
   const [saveMsg, setSaveMsg] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  const [receiptItems, setReceiptItems] = useState([]);
+  const [selectedReceiptIndex, setSelectedReceiptIndex] = useState(0);
 
   const {
     control,
@@ -68,6 +74,9 @@ export function useUploadReport() {
     [manualName, productName],
   );
 
+  // ✅ IMPORTANT: isReceipt는 "receiptItems로 추측"이 아니라 mode가 기준이어야 함
+  const isReceipt = mode === 'receipt';
+
   const storesQuery = useQuery({
     queryKey: ['stores'],
     queryFn: async () => {
@@ -95,26 +104,41 @@ export function useUploadReport() {
   }, [setValue, storeName, storesQuery.data]);
 
   const ocrMutation = useMutation({
-    mutationFn: async (file) => {
+    mutationFn: async ({ file, mode }) => {
       const form = new FormData();
       form.append('image', file);
 
       const data = await apiPostForm('/ocr', form);
       const raw = data?.text || '';
 
+      // ✅ mode에 따라 receipt 파싱을 "켜거나 끄기"
+      const receipt = mode === 'receipt' ? parseReceiptItems(raw) || [] : [];
+
       const prices = extractPriceCandidates(raw, 6);
       const nextPrice = prices[0] || extractBestPrice(raw);
       const candidates = extractNameCandidates(raw, nextPrice, 3);
 
-      return { raw, prices, nextPrice, candidates };
+      return { raw, prices, nextPrice, candidates, receipt };
     },
-    onSuccess: ({ raw, prices, nextPrice, candidates }) => {
+    onSuccess: ({ raw, prices, nextPrice, candidates, receipt }) => {
       setOcrText(raw);
+
+      setReceiptItems(receipt);
+      setSelectedReceiptIndex(0);
+
       setPriceCandidates(prices);
       setPrice(nextPrice);
 
       setNameCandidates(candidates);
       setValue('productName', candidates[0] || '', { shouldValidate: true });
+
+      // ✅ receipt mode일 때만 첫번째 아이템으로 세팅
+      if (mode === 'receipt' && receipt && receipt.length > 0) {
+        const first = receipt[0];
+        if (first?.price_display) setPrice(first.price_display);
+        else if (first?.price != null) setPrice(`$${first.price}`);
+        if (first?.name) setValue('productName', first.name, { shouldValidate: true });
+      }
     },
     onError: (e) => {
       console.error(e);
@@ -122,6 +146,8 @@ export function useUploadReport() {
       setPrice('');
       setPriceCandidates([]);
       setNameCandidates([]);
+      setReceiptItems([]);
+      setSelectedReceiptIndex(0);
       setValue('productName', '', { shouldValidate: true });
     },
   });
@@ -130,18 +156,17 @@ export function useUploadReport() {
     mutationFn: async ({ file, values }) => {
       const form = new FormData();
       form.append('image', file);
+
       form.append('storeName', values.storeName.trim());
       form.append('productName', (values.productName || '').trim());
-      form.append('price', price);
+      form.append('price', (values.price ?? price) || '');
 
       if (values.unit?.trim()) form.append('unit', values.unit.trim());
       if (values.notes?.trim()) form.append('notes', values.notes.trim());
 
       return apiPostForm('/report', form);
     },
-    onSuccess: () => {
-      setSaveMsg('✅ Upload complete! Redirecting…');
-    },
+    onSuccess: () => setSaveMsg('✅ Upload complete! Redirecting…'),
     onError: (e) => {
       console.error(e);
       setSaveMsg('❌ Upload failed. Please try again.');
@@ -155,19 +180,52 @@ export function useUploadReport() {
     setPickedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
 
+    // reset view states
     setOcrText('');
     setPrice('');
     setPriceCandidates([]);
     setNameCandidates([]);
+    setReceiptItems([]);
+    setSelectedReceiptIndex(0);
 
     setValue('manualName', '');
     setValue('productName', '');
     setSaveMsg('');
     setSubmitted(false);
 
-    ocrMutation.mutate(file);
+    // ✅ mode 포함해서 OCR
+    ocrMutation.mutate({ file, mode });
 
     e.target.value = '';
+  };
+
+  // ✅ mode 바꾸면 (사진 선택 전) 상태를 한번 정리해주는게 UX 좋음
+  useEffect(() => {
+    // 이미 파일이 선택된 상태에서 mode 바꾸면 혼란 생김 → 초기화 추천
+    // (원치 않으면 이 블록 삭제해도 됨)
+    if (!pickedFile) {
+      setOcrText('');
+      setPrice('');
+      setPriceCandidates([]);
+      setNameCandidates([]);
+      setReceiptItems([]);
+      setSelectedReceiptIndex(0);
+      setValue('manualName', '');
+      setValue('productName', '');
+      setSaveMsg('');
+      setSubmitted(false);
+    }
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selectReceiptItem = (idx) => {
+    setSelectedReceiptIndex(idx);
+    const it = receiptItems[idx];
+    if (!it) return;
+
+    if (it.price_display) setPrice(it.price_display);
+    else if (it.price != null) setPrice(`$${it.price}`);
+
+    if (it.name) setValue('productName', it.name, { shouldValidate: true });
   };
 
   useEffect(() => {
@@ -182,6 +240,8 @@ export function useUploadReport() {
     setPrice('');
     setPriceCandidates([]);
     setNameCandidates([]);
+    setReceiptItems([]);
+    setSelectedReceiptIndex(0);
     setSaveMsg('');
     setSubmitted(false);
 
@@ -195,15 +255,20 @@ export function useUploadReport() {
   };
 
   const missingFile = !pickedFile;
-  const missingPrice = !price;
+
+  // ✅ mode 기준으로 missingPrice 결정
+  const missingPrice = mode === 'single' ? !price : receiptItems.length === 0;
 
   const canUpload =
     !!pickedFile &&
-    !!price &&
-    !!finalName &&
     !!storeName?.trim() &&
     !uploadMutation.isPending &&
-    !isSubmitting;
+    !isSubmitting &&
+    (
+      (mode === 'single' && !!price && !!finalName) ||
+      (mode === 'receipt' &&
+        receiptItems.filter((it) => !!it?.name && (it?.price_display || it?.price != null)).length >= 2)
+    );
 
   const uploadReport = handleSubmit(
     async (values) => {
@@ -212,11 +277,46 @@ export function useUploadReport() {
 
       setSaveMsg('');
 
+      if (mode === 'receipt') {
+        const itemsToSave = receiptItems.filter(
+          (it) => !!it?.name && (it?.price_display || it?.price != null),
+        );
+
+        if (itemsToSave.length === 0) {
+          setSaveMsg('❌ No valid receipt items found.');
+          return;
+        }
+
+        try {
+          for (let i = 0; i < itemsToSave.length; i++) {
+            const it = itemsToSave[i];
+            const itemPrice = it.price_display || (it.price != null ? `$${it.price}` : '');
+
+            await uploadMutation.mutateAsync({
+              file: pickedFile,
+              values: {
+                ...values,
+                productName: it.name,
+                price: itemPrice,
+              },
+            });
+          }
+
+          setSaveMsg(`✅ Saved ${itemsToSave.length} items! Redirecting…`);
+          return;
+        } catch (e) {
+          console.error(e);
+          setSaveMsg('❌ Upload failed while saving receipt items.');
+          return;
+        }
+      }
+
       await uploadMutation.mutateAsync({
         file: pickedFile,
         values: {
           ...values,
           productName: finalName,
+          price,
         },
       });
     },
@@ -224,6 +324,10 @@ export function useUploadReport() {
   );
 
   return {
+    // ✅ expose mode
+    mode,
+    setMode,
+
     previewUrl,
     ocrText,
     loading: ocrMutation.isPending,
@@ -237,6 +341,10 @@ export function useUploadReport() {
 
     nameCandidates,
     storeName,
+
+    receiptItems,
+    selectedReceiptIndex,
+    selectReceiptItem,
 
     saveMsg,
     submitted,
