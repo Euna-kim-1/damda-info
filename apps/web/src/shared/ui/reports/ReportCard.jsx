@@ -1,21 +1,13 @@
 import { Card, CardContent, CardMedia, Stack, Typography } from '@mui/material';
+import { formatShortDate } from '../../utils/formatters';
 
-function formatDate(dateStr) {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('en-CA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-export default function ReportCard({
+const ReportCard = ({
   title,
   storeName,
   price,
   imageUrl,
   reportedAt,
-}) {
+}) => {
   const fallbackImage = '/2.png';
 
   return (
@@ -74,10 +66,12 @@ export default function ReportCard({
           </Typography>
 
           <Typography variant="caption" color="text.secondary">
-            Updated: {formatDate(reportedAt)}
+            Updated: {formatShortDate(reportedAt, '-')}
           </Typography>
         </Stack>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default ReportCard;

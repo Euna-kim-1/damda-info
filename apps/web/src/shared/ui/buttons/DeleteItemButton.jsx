@@ -2,11 +2,11 @@ import { Box, IconButton, useMediaQuery } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 
-export default function DeleteItemButton({
+const DeleteItemButton = ({
   onDelete,
   disabled = false,
   iconColor = 'text.secondary',
-}) {
+}) => {
   const isDesktop = useMediaQuery('(hover: hover) and (pointer: fine)');
 
   return (
@@ -43,4 +43,6 @@ export default function DeleteItemButton({
       </IconButton>
     </Box>
   );
-}
+};
+
+export default DeleteItemButton;

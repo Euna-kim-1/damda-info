@@ -28,7 +28,7 @@ const sloganText =
 const productKeywords =
   /(seasoning|mix|powder|salt|soup|base|broth|flavor|flavoured|paste|sauce|ramen|noodle|tea|snack|curry|dashida|ssamjang|soy|kimchi|tofu|sprouts|chip|onion|shrimp|cracker|pancake|pepper|clam|mushroom|paper)/i;
 
-function scoreName(s) {
+const scoreName = (s) => {
   let score = 0;
 
   const letters = (s.match(/[A-Za-z]/g) || []).length;
@@ -44,16 +44,19 @@ function scoreName(s) {
   if (words <= 1) score -= 4;
 
   return score;
-}
+};
 
 export function extractPriceCandidates(raw, limit = 6) {
-  const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+  const lines = raw
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
   const candidates = [];
 
   for (const line of lines) {
     const matches = [
       ...line.matchAll(
-        /(\$?\s*\d{1,3}(?:[,\s]\d{3})*(?:\.\d{2})|\$?\s*\d+\.\d{2})/g
+        /(\$?\s*\d{1,3}(?:[,\s]\d{3})*(?:\.\d{2})|\$?\s*\d+\.\d{2})/g,
       ),
     ];
     for (const m of matches)
@@ -83,7 +86,7 @@ export function extractBestPrice(raw) {
   return extractPriceCandidates(raw, 1)[0] || '';
 }
 
-function pickNameCandidatesFrom(lines, limit) {
+const pickNameCandidatesFrom = (lines, limit) => {
   const cleaned = lines
     .map((l) => l.trim())
     .filter(Boolean)
@@ -97,10 +100,13 @@ function pickNameCandidatesFrom(lines, limit) {
   const uniq = Array.from(new Set(cleaned));
   uniq.sort((a, b) => scoreName(b) - scoreName(a));
   return uniq.slice(0, limit);
-}
+};
 
 export function extractNameCandidates(raw, bestPrice, limit = 3) {
-  const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+  const lines = raw
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
   return pickNameCandidatesFrom(lines, limit);
 }
 
@@ -152,7 +158,8 @@ export function parseReceiptItems(rawText = '') {
     // 가격/할인 정보 줄
     if (t.includes('unit price')) return true;
     if (t.includes('item number')) return true;
-    if (t.includes('saving') && !hasEnglish(s.replace(/saving/gi, ''))) return true;
+    if (t.includes('saving') && !hasEnglish(s.replace(/saving/gi, '')))
+      return true;
     if (t.includes('reg price') || t.includes('reg.')) return true;
     if (t.includes('on sale')) return true;
 
@@ -172,7 +179,11 @@ export function parseReceiptItems(rawText = '') {
   // Footer 시작점 찾기
   const cutIndex = lines.findIndex((l) => {
     const t = l.toLowerCase();
-    return t.includes('sub-total') || t.includes('subtotal') || t.includes('total due');
+    return (
+      t.includes('sub-total') ||
+      t.includes('subtotal') ||
+      t.includes('total due')
+    );
   });
 
   const itemLines = cutIndex >= 0 ? lines.slice(0, cutIndex) : lines;
@@ -221,7 +232,7 @@ export function parseReceiptItems(rawText = '') {
       items.push({
         name,
         price: unitPrice,
-        price_display: `$${unitPrice.toFixed(2)}`
+        price_display: `$${unitPrice.toFixed(2)}`,
       });
       seenNames.add(name);
     }
@@ -256,13 +267,19 @@ export function parseReceiptItems(rawText = '') {
       const price = Number(match[2].replace('$', ''));
 
       // 이름에 최소 3글자 연속 영어가 있어야 함
-      if (name && name.length >= 3 && name.length <= 70 &&
+      if (
+        name &&
+        name.length >= 3 &&
+        name.length <= 70 &&
         /[A-Za-z]{3,}/.test(name) &&
-        !seenNames.has(name) && Number.isFinite(price) && price > 0) {
+        !seenNames.has(name) &&
+        Number.isFinite(price) &&
+        price > 0
+      ) {
         items.push({
           name,
           price,
-          price_display: `$${price.toFixed(2)}`
+          price_display: `$${price.toFixed(2)}`,
         });
         seenNames.add(name);
       }
@@ -304,7 +321,7 @@ export function parseReceiptItems(rawText = '') {
       items.push({
         name,
         price: foundPrice,
-        price_display: `$${foundPrice.toFixed(2)}`
+        price_display: `$${foundPrice.toFixed(2)}`,
       });
       seenNames.add(name);
     }

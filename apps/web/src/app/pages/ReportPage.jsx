@@ -2,24 +2,9 @@ import { Box, Button, Typography } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { useRecentReports } from '../../features/reports/hooks';
 import ContainerSection from '../../shared/layout/ContainerSection';
+import { formatPrice, formatShortDate } from '../../shared/utils/formatters';
 
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-CA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-function formatPrice(price) {
-  if (price == null) return '—';
-  const n = Number(price);
-  if (!Number.isFinite(n)) return '—';
-  return `$${n.toFixed(2)}`;
-}
-
-export default function ReportPage() {
+const ReportPage = () => {
   const [params] = useSearchParams();
   const q = (params.get('q') || '').trim();
 
@@ -86,7 +71,6 @@ export default function ReportPage() {
         !isError &&
         reports.map((r) => {
           const hasImage = !!r.image_url;
-
           return (
             <Box
               key={r.id}
@@ -107,7 +91,7 @@ export default function ReportPage() {
                   color="text.secondary"
                   sx={{ position: 'absolute', top: 8, right: 12 }}
                 >
-                  Updated: {formatDate(r.reported_at)}
+                  Updated: {formatShortDate(r.reported_at)}
                 </Typography>
               )}
 
@@ -162,7 +146,7 @@ export default function ReportPage() {
                   color="secondary.dark"
                   display="block"
                 >
-                  {r.price != null ? `$${Number(r.price).toFixed(2)}` : '—'}
+                  {formatPrice(r.price, '—')}
                 </Typography>
 
                 <Typography
@@ -175,8 +159,10 @@ export default function ReportPage() {
                 </Typography>
               </Box>
             </Box>
-          )
+          );
         })}
     </ContainerSection>
   );
-}
+};
+
+export default ReportPage;

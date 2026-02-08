@@ -1,7 +1,7 @@
 import { Box, IconButton, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
-export default function FloatingActionMenu({ actions, radius = 84 }) {
+const FloatingActionMenu = ({ actions, radius = 84 }) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -93,4 +93,6 @@ export default function FloatingActionMenu({ actions, radius = 84 }) {
       </IconButton>
     </Box>
   );
-}
+};
+
+export default FloatingActionMenu;

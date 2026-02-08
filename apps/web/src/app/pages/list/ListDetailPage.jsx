@@ -21,6 +21,7 @@ import {
 import BackButton from '../../../shared/ui/buttons/BackButton';
 import DeleteItemButton from '../../../shared/ui/buttons/DeleteItemButton';
 import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
+import SwipeableRow from '../../../shared/ui/SwipeableRow';
 import ListConfirmDialog from './ListConfirmDialog';
 
 import {
@@ -34,102 +35,9 @@ import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 import DeleteSweepOutlinedIcon from '@mui/icons-material/DeleteSweepOutlined';
 import RestartAltOutlinedIcon from '@mui/icons-material/RestartAltOutlined';
 
-function SwipeableRow({ onSwipeDelete, children }) {
-  const startXRef = useRef(0);
-  const deltaRef = useRef(0);
-  const draggingRef = useRef(false);
-  const suppressClickRef = useRef(false);
-  const [offset, setOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const threshold = -80;
-  const maxOffset = -120;
-
-  function startGesture(clientX) {
-    draggingRef.current = true;
-    setIsDragging(true);
-    startXRef.current = clientX;
-    deltaRef.current = 0;
-  }
-
-  function moveGesture(clientX, e) {
-    if (!draggingRef.current) return;
-    const delta = clientX - startXRef.current;
-    if (delta > 0) return;
-    deltaRef.current = delta;
-    setOffset(Math.max(delta, maxOffset));
-    if (Math.abs(delta) > 6 && e?.cancelable) {
-      e.preventDefault();
-    }
-  }
-
-  function finishGesture() {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    setIsDragging(false);
-    const delta = deltaRef.current;
-    if (Math.abs(delta) > 10) {
-      suppressClickRef.current = true;
-      setTimeout(() => {
-        suppressClickRef.current = false;
-      }, 0);
-    }
-    setOffset(0);
-    if (delta < threshold) onSwipeDelete?.();
-  }
-
-  function handlePointerDown(e) {
-    if (e.pointerType && e.pointerType !== 'touch') return;
-    startGesture(e.clientX, e);
-    if (e.currentTarget.setPointerCapture) {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
-  }
-
-  function handlePointerMove(e) {
-    if (e.pointerType && e.pointerType !== 'touch') return;
-    moveGesture(e.clientX, e);
-  }
-
-  return (
-    <Box
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={finishGesture}
-      onPointerCancel={finishGesture}
-      onPointerLeave={(e) => {
-        if (e.pointerType === 'mouse') finishGesture();
-      }}
-      onTouchStart={(e) => {
-        if (e.touches?.[0]) startGesture(e.touches[0].clientX, e);
-      }}
-      onTouchMove={(e) => {
-        if (e.touches?.[0]) moveGesture(e.touches[0].clientX, e);
-      }}
-      onTouchEnd={finishGesture}
-      onTouchCancel={finishGesture}
-      onClickCapture={(e) => {
-        if (suppressClickRef.current) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      sx={{
-        width: '100%',
-        transform: `translateX(${offset}px)`,
-        transition: isDragging ? 'none' : 'transform 120ms ease-out',
-        touchAction: 'pan-y',
-        userSelect: 'none',
-      }}
-    >
-      {children}
-    </Box>
-  );
-}
-
 const NAV_HEIGHT = 64;
 
-export default function ListDetailPage() {
+const ListDetailPage = () => {
   const navigate = useNavigate();
   const { listId } = useParams();
 
@@ -148,21 +56,21 @@ export default function ListDetailPage() {
 
   const canAdd = name.trim().length > 0 && !createItemMut.isPending;
 
-  async function onAdd(e) {
+  const onAdd = async (e) => {
     e.preventDefault();
     const n = name.trim();
     if (!n) return;
     await createItemMut.mutateAsync({ name: n, note: null });
     setName('');
     setAddOpen(false);
-  }
+  };
 
-  function toggle(item) {
+  const toggle = (item) => {
     updateItemMut.mutate({
       itemId: item.id,
       patch: { checked: !item.checked },
     });
-  }
+  };
 
   const sorted = useMemo(() => items ?? [], [items]);
 
@@ -179,38 +87,38 @@ export default function ListDetailPage() {
     return fromLists || fromItems || 'List';
   }, [items, listId, lists]);
 
-  function openConfirm(item) {
+  const openConfirm = (item) => {
     setConfirmTarget(item);
-  }
+  };
 
-  function closeConfirm() {
+  const closeConfirm = () => {
     setConfirmTarget(null);
-  }
+  };
 
-  function handleConfirmDelete() {
+  const handleConfirmDelete = () => {
     if (!confirmTarget) return;
     deleteItemMut.mutate(confirmTarget.id, { onSettled: closeConfirm });
-  }
+  };
 
-  function openBulkConfirm() {
+  const openBulkConfirm = () => {
     if (checkedItems.length === 0) return;
     setConfirmBulk(true);
-  }
+  };
 
-  function openResetConfirm() {
+  const openResetConfirm = () => {
     if (checkedItems.length === 0) return;
     setConfirmReset(true);
-  }
+  };
 
-  function closeBulkConfirm() {
+  const closeBulkConfirm = () => {
     setConfirmBulk(false);
-  }
+  };
 
-  function closeResetConfirm() {
+  const closeResetConfirm = () => {
     setConfirmReset(false);
-  }
+  };
 
-  async function handleBulkDelete() {
+  const handleBulkDelete = async () => {
     if (checkedItems.length === 0) {
       closeBulkConfirm();
       return;
@@ -219,9 +127,9 @@ export default function ListDetailPage() {
       checkedItems.map((item) => deleteItemMut.mutateAsync(item.id)),
     );
     closeBulkConfirm();
-  }
+  };
 
-  async function handleResetChecked() {
+  const handleResetChecked = async () => {
     if (checkedItems.length === 0) return;
     await Promise.all(
       checkedItems.map((item) =>
@@ -232,7 +140,7 @@ export default function ListDetailPage() {
       ),
     );
     closeResetConfirm();
-  }
+  };
 
   return (
     <Box
@@ -473,4 +381,6 @@ export default function ListDetailPage() {
       />
     </Box>
   );
-}
+};
+
+export default ListDetailPage;

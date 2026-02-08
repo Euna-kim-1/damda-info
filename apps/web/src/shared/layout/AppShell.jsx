@@ -20,7 +20,6 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
 const NAV_HEIGHT = 64;
-
 const navItems = [
   { label: 'Home', value: '/', icon: <CottageOutlinedIcon /> },
   { label: 'Report', value: '/report', icon: <LocalMallOutlinedIcon /> },
@@ -31,7 +30,7 @@ const navItems = [
   { label: 'List', value: '/lists', icon: <ListAltIcon /> },
 ];
 
-export default function AppShell({ children }) {
+const AppShell = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -148,4 +147,6 @@ export default function AppShell({ children }) {
       </Paper>
     </Box>
   );
-}
+};
+
+export default AppShell;
