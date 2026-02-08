@@ -4,6 +4,10 @@ import {
   Box,
   Button,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   List,
   ListItem,
@@ -18,6 +22,7 @@ import BackButton from '../../../shared/ui/buttons/BackButton';
 import DeleteItemButton from '../../../shared/ui/buttons/DeleteItemButton';
 import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
 import ListConfirmDialog from './ListConfirmDialog';
+
 import {
   useCreateListItem,
   useDeleteListItem,
@@ -25,10 +30,11 @@ import {
   useLists,
   useUpdateListItem,
 } from '../../../features/lists/hooks';
+import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 import DeleteSweepOutlinedIcon from '@mui/icons-material/DeleteSweepOutlined';
 import RestartAltOutlinedIcon from '@mui/icons-material/RestartAltOutlined';
 
-function SwipeableRow({ onSwipeDelete, disabled, children }) {
+function SwipeableRow({ onSwipeDelete, children }) {
   const startXRef = useRef(0);
   const deltaRef = useRef(0);
   const draggingRef = useRef(false);
@@ -39,25 +45,22 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
   const threshold = -80;
   const maxOffset = -120;
 
-  function handlePointerDown(e) {
-    if (disabled) return;
-    if (e.pointerType && e.pointerType !== 'touch') return;
+  function startGesture(clientX) {
     draggingRef.current = true;
     setIsDragging(true);
-    startXRef.current = e.clientX;
+    startXRef.current = clientX;
     deltaRef.current = 0;
-    if (e.currentTarget.setPointerCapture) {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
   }
 
-  function handlePointerMove(e) {
-    if (!draggingRef.current || disabled) return;
-    if (e.pointerType && e.pointerType !== 'touch') return;
-    const delta = e.clientX - startXRef.current;
+  function moveGesture(clientX, e) {
+    if (!draggingRef.current) return;
+    const delta = clientX - startXRef.current;
     if (delta > 0) return;
     deltaRef.current = delta;
     setOffset(Math.max(delta, maxOffset));
+    if (Math.abs(delta) > 6 && e?.cancelable) {
+      e.preventDefault();
+    }
   }
 
   function finishGesture() {
@@ -72,7 +75,20 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
       }, 0);
     }
     setOffset(0);
-    if (delta < threshold && !disabled) onSwipeDelete?.();
+    if (delta < threshold) onSwipeDelete?.();
+  }
+
+  function handlePointerDown(e) {
+    if (e.pointerType && e.pointerType !== 'touch') return;
+    startGesture(e.clientX, e);
+    if (e.currentTarget.setPointerCapture) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+  }
+
+  function handlePointerMove(e) {
+    if (e.pointerType && e.pointerType !== 'touch') return;
+    moveGesture(e.clientX, e);
   }
 
   return (
@@ -81,7 +97,17 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
       onPointerMove={handlePointerMove}
       onPointerUp={finishGesture}
       onPointerCancel={finishGesture}
-      onPointerLeave={finishGesture}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse') finishGesture();
+      }}
+      onTouchStart={(e) => {
+        if (e.touches?.[0]) startGesture(e.touches[0].clientX, e);
+      }}
+      onTouchMove={(e) => {
+        if (e.touches?.[0]) moveGesture(e.touches[0].clientX, e);
+      }}
+      onTouchEnd={finishGesture}
+      onTouchCancel={finishGesture}
       onClickCapture={(e) => {
         if (suppressClickRef.current) {
           e.preventDefault();
@@ -93,12 +119,15 @@ function SwipeableRow({ onSwipeDelete, disabled, children }) {
         transform: `translateX(${offset}px)`,
         transition: isDragging ? 'none' : 'transform 120ms ease-out',
         touchAction: 'pan-y',
+        userSelect: 'none',
       }}
     >
       {children}
     </Box>
   );
 }
+
+const NAV_HEIGHT = 64;
 
 export default function ListDetailPage() {
   const navigate = useNavigate();
@@ -111,8 +140,11 @@ export default function ListDetailPage() {
   const deleteItemMut = useDeleteListItem(listId);
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [confirmBulk, setConfirmBulk] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   const [name, setName] = useState('');
+  const addButtonRef = useRef(null);
 
   const canAdd = name.trim().length > 0 && !createItemMut.isPending;
 
@@ -122,17 +154,18 @@ export default function ListDetailPage() {
     if (!n) return;
     await createItemMut.mutateAsync({ name: n, note: null });
     setName('');
+    setAddOpen(false);
   }
 
-  async function toggle(item) {
-    await updateItemMut.mutateAsync({
+  function toggle(item) {
+    updateItemMut.mutate({
       itemId: item.id,
       patch: { checked: !item.checked },
     });
   }
 
   const sorted = useMemo(() => items ?? [], [items]);
-  const pendingItemId = updateItemMut.variables?.itemId;
+
   const checkedItems = useMemo(
     () => sorted.filter((item) => item.checked),
     [sorted],
@@ -164,8 +197,17 @@ export default function ListDetailPage() {
     setConfirmBulk(true);
   }
 
+  function openResetConfirm() {
+    if (checkedItems.length === 0) return;
+    setConfirmReset(true);
+  }
+
   function closeBulkConfirm() {
     setConfirmBulk(false);
+  }
+
+  function closeResetConfirm() {
+    setConfirmReset(false);
   }
 
   async function handleBulkDelete() {
@@ -189,72 +231,72 @@ export default function ListDetailPage() {
         }),
       ),
     );
+    closeResetConfirm();
   }
 
   return (
-    <Box sx={{ px: 2, py: 2, maxWidth: 720, mx: 'auto' }}>
+    <Box
+      sx={{
+        px: 2,
+        py: 2,
+        pb: checkedItems.length >= 2 ? 12 : 2,
+        maxWidth: 720,
+        mx: 'auto',
+      }}
+    >
       <Stack
         direction="row"
         alignItems="center"
         spacing={1.25}
         sx={{ mb: 1.5, width: '100%', justifyContent: 'space-between' }}
       >
-        <Typography variant="h5">{listTitle}</Typography>
-        <BackButton onClick={() => navigate('/lists')} />
+        <Box sx={{ width: 40, display: 'flex', alignItems: 'center' }}>
+          <BackButton onClick={() => navigate('/lists')} />
+        </Box>
+        <Typography variant="h5" sx={{ flex: 1, textAlign: 'center' }}>
+          {listTitle}
+        </Typography>
+        <IconButton
+          ref={addButtonRef}
+          onClick={() => setAddOpen(true)}
+          sx={(theme) => ({
+            bgcolor: theme.palette.secondary.light,
+            color: theme.palette.secondary.contrastText,
+            '&:hover': { bgcolor: theme.palette.secondary.light },
+          })}
+        >
+          <PlaylistAddOutlinedIcon />
+        </IconButton>
       </Stack>
 
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ mb: 1.5, display: 'block' }}
+      <Dialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        fullWidth
+        TransitionProps={{ onExited: () => addButtonRef.current?.focus() }}
       >
-        listId: {listId}
-      </Typography>
-
-      <Box component="form" onSubmit={onAdd} sx={{ mb: 2 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <TextField
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. green onions, milk, bread..."
-            size="small"
-            fullWidth
-          />
-        </Stack>
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={!canAdd}
-          fullWidth
-          sx={{ mt: 1 }}
-        >
-          {createItemMut.isPending ? 'Adding...' : 'Add'}
-        </Button>
-      </Box>
-      {checkedItems.length >= 2 && (
-        <Stack direction="row" spacing={1} sx={{ mb: 1, mt: -1 }}>
-          <PrimaryButton
-            variantStyle="primary4"
-            count={checkedItems.length}
-            onClick={openBulkConfirm}
-            disabled={checkedItems.length === 0}
-            startIcon={<DeleteSweepOutlinedIcon fontSize="small" />}
-            sx={{ p: 1 }}
-          >
-            Delete checked ({checkedItems.length})
-          </PrimaryButton>
-          <PrimaryButton
-            variantStyle="primary4"
-            onClick={handleResetChecked}
-            disabled={checkedItems.length === 0 || updateItemMut.isPending}
-            startIcon={<RestartAltOutlinedIcon fontSize="small" />}
-            sx={{ p: 1 }}
-          >
-            Reset checked
-          </PrimaryButton>
-        </Stack>
-      )}
-
+        <DialogTitle>Add item</DialogTitle>
+        <Box component="form" onSubmit={onAdd}>
+          <DialogContent sx={{ pt: 1 }}>
+            <TextField
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. green onions, milk, bread..."
+              size="small"
+              fullWidth
+              autoFocus
+            />
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => setAddOpen(false)} color="inherit">
+              Cancel
+            </Button>
+            <Button type="submit" variant="contained" disabled={!canAdd}>
+              {createItemMut.isPending ? 'Adding...' : 'Add'}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
       {isLoading && <Typography>Loading...</Typography>}
       {isError && (
         <Typography color="error">
@@ -262,15 +304,13 @@ export default function ListDetailPage() {
         </Typography>
       )}
 
-      <List sx={{ p: 0, display: 'grid', gap: 1 }}>
+      <List sx={{ p: 0, display: 'grid', gap: 1.25 }}>
         {sorted.map((item) => (
           <ListItem
             key={item.id}
             disablePadding
             sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 2,
+              borderRadius: 999,
               overflow: 'hidden',
             }}
           >
@@ -278,18 +318,44 @@ export default function ListDetailPage() {
               onSwipeDelete={() => {
                 openConfirm(item);
               }}
-              disabled={deleteItemMut.isPending}
             >
               <ListItemButton
                 onClick={() => toggle(item)}
-                disabled={
-                  updateItemMut.isPending &&
-                  String(pendingItemId) === String(item.id)
-                }
-                sx={{
+                disableRipple
+                disableTouchRipple
+                sx={(theme) => ({
                   alignItems: 'center',
-                  '&.Mui-disabled': { opacity: 1, color: 'inherit' },
-                }}
+                  bgcolor: item.checked
+                    ? theme.palette.secondary.light
+                    : theme.palette.background.paper,
+                  color: item.checked
+                    ? theme.palette.secondary.contrastText
+                    : theme.palette.secondary.dark,
+                  borderRadius: 999,
+                  border: item.checked
+                    ? '1px solid transparent'
+                    : `1px solid ${theme.palette.secondary.light}`,
+                  px: 2,
+                  py: 1.1,
+                  boxShadow: item.checked
+                    ? `0 10px 22px ${theme.palette.secondary.light}33`
+                    : `0 6px 14px ${theme.palette.primary.main}12`,
+                  '&:hover': {
+                    bgcolor: item.checked
+                      ? theme.palette.secondary.light
+                      : theme.palette.background.paper,
+                  },
+                  '&.Mui-focusVisible': {
+                    bgcolor: item.checked
+                      ? theme.palette.secondary.light
+                      : theme.palette.background.paper,
+                  },
+                  '&:active': {
+                    bgcolor: item.checked
+                      ? theme.palette.secondary.light
+                      : theme.palette.background.paper,
+                  },
+                })}
               >
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   <Checkbox
@@ -297,6 +363,16 @@ export default function ListDetailPage() {
                     checked={!!item.checked}
                     tabIndex={-1}
                     disableRipple
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={() => toggle(item)}
+                    sx={(theme) => ({
+                      color: item.checked
+                        ? theme.palette.secondary.contrastText
+                        : theme.palette.secondary.dark,
+                      '&.Mui-checked': {
+                        color: theme.palette.secondary.contrastText,
+                      },
+                    })}
                   />
                 </ListItemIcon>
                 <ListItemText
@@ -309,16 +385,67 @@ export default function ListDetailPage() {
                       {item.name}
                     </Typography>
                   }
+                  secondary={
+                    item.note ? (
+                      <Typography
+                        variant="body2"
+                        sx={(theme) => ({
+                          color: item.checked
+                            ? 'rgba(255,255,255,0.75)'
+                            : theme.palette.secondary.dark,
+                        })}
+                      >
+                        {item.note}
+                      </Typography>
+                    ) : null
+                  }
                 />
                 <DeleteItemButton
                   onDelete={() => openConfirm(item)}
-                  disabled={deleteItemMut.isPending}
+                  disabled={false}
+                  iconColor={item.checked ? 'common.white' : 'secondary.dark'}
                 />
               </ListItemButton>
             </SwipeableRow>
           </ListItem>
         ))}
       </List>
+      {checkedItems.length >= 2 && (
+        <Box
+          sx={{
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: NAV_HEIGHT + 8,
+            zIndex: (theme) => theme.zIndex.appBar + 9,
+            pointerEvents: 'none',
+          }}
+        >
+          <Box sx={{ maxWidth: 720, mx: 'auto', px: 2, pointerEvents: 'auto' }}>
+            <Stack direction="row" spacing={1}>
+              <PrimaryButton
+                variantStyle="primary3"
+                count={checkedItems.length}
+                onClick={openBulkConfirm}
+                disabled={checkedItems.length === 0}
+                startIcon={<DeleteSweepOutlinedIcon fontSize="small" />}
+                sx={{ p: 1, flex: 1 }}
+              >
+                Delete checked ({checkedItems.length})
+              </PrimaryButton>
+              <PrimaryButton
+                variantStyle="primary3"
+                onClick={openResetConfirm}
+                disabled={checkedItems.length === 0}
+                startIcon={<RestartAltOutlinedIcon fontSize="small" />}
+                sx={{ p: 1, flex: 1 }}
+              >
+                Reset checked ({checkedItems.length})
+              </PrimaryButton>
+            </Stack>
+          </Box>
+        </Box>
+      )}
       <ListConfirmDialog
         open={!!confirmTarget}
         title="Delete item"
@@ -334,6 +461,15 @@ export default function ListDetailPage() {
         }?`}
         onClose={closeBulkConfirm}
         onConfirm={handleBulkDelete}
+      />
+      <ListConfirmDialog
+        open={confirmReset}
+        title="Reset checked items"
+        message={`Reset ${checkedItems.length} checked item${
+          checkedItems.length === 1 ? '' : 's'
+        }?`}
+        onClose={closeResetConfirm}
+        onConfirm={handleResetChecked}
       />
     </Box>
   );
