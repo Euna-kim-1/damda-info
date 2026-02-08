@@ -1,11 +1,10 @@
+import { forwardRef } from 'react';
 import { Box, Button } from '@mui/material';
 
-export default function PrimaryButton({
-  children,
-  sx,
-  variantStyle = 'primary1',
-  ...props
-}) {
+const PrimaryButton = forwardRef(function PrimaryButton(
+  { children, sx, variantStyle = 'primary1', ...props },
+  ref,
+) {
   const variantStyles = {
     primary1: {
       bgcolor: 'primary.light',
@@ -38,6 +37,7 @@ export default function PrimaryButton({
   return (
     <Button
       disableElevation
+      ref={ref}
       sx={[
         {
           borderRadius: 8,
@@ -55,4 +55,6 @@ export default function PrimaryButton({
       <Box component="span">{children}</Box>
     </Button>
   );
-}
+});
+
+export default PrimaryButton;

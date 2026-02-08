@@ -63,8 +63,19 @@ export function useCreateListItem(listId) {
 
     return useMutation({
         mutationFn: ({ name, note }) => createListItem(listId, name, note),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: listKeys.items(deviceId, listId) });
+        onSuccess: (data) => {
+            if (!data) return;
+            qc.setQueryData(listKeys.items(deviceId, listId), (old = []) => {
+                const exists = old.some(
+                    (item) => String(item.id) === String(data.id)
+                );
+                if (exists) {
+                    return old.map((item) =>
+                        String(item.id) === String(data.id) ? { ...item, ...data } : item
+                    );
+                }
+                return [...old, data];
+            });
         },
     });
 }
@@ -75,8 +86,8 @@ export function useUpdateListItem(listId) {
 
     return useMutation({
         mutationFn: ({ itemId, patch }) => updateListItem(itemId, patch),
-        onMutate: async ({ itemId, patch }) => {
-            await qc.cancelQueries({ queryKey: listKeys.items(deviceId, listId) });
+        onMutate: ({ itemId, patch }) => {
+            qc.cancelQueries({ queryKey: listKeys.items(deviceId, listId) });
             const previous = qc.getQueryData(listKeys.items(deviceId, listId));
             qc.setQueryData(listKeys.items(deviceId, listId), (old = []) =>
                 old.map((item) =>
@@ -90,8 +101,13 @@ export function useUpdateListItem(listId) {
                 qc.setQueryData(listKeys.items(deviceId, listId), ctx.previous);
             }
         },
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: listKeys.items(deviceId, listId) });
+        onSuccess: (data) => {
+            if (!data) return;
+            qc.setQueryData(listKeys.items(deviceId, listId), (old = []) =>
+                old.map((item) =>
+                    String(item.id) === String(data.id) ? { ...item, ...data } : item
+                )
+            );
         },
     });
 }
