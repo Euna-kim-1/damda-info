@@ -7,7 +7,7 @@ import {
   extractBestPrice,
   extractNameCandidates,
   extractPriceCandidates,
-  parseReceiptItems, // ✅ 추가
+  parseReceiptItems,
 } from './uploadUtils';
 import { apiGet, apiPostForm } from '../../shared/api/client';
 
@@ -20,9 +20,6 @@ const formSchema = z
     notes: z.string().trim().optional().default(''),
   })
   .superRefine((data, ctx) => {
-    // ✅ 영수증 모드에서는 productName/manualName 없어도 "bulk 저장" 가능하게 할 거라
-    // 이 검증은 UI 단에서만 의미가 있고, uploadReport에서 분기 처리할 예정.
-    // 그래서 여기서는 유지하되, receipt 모드일 때는 uploadReport에서 통과시키게 처리.
     if (!data.manualName && !data.productName) {
       ctx.addIssue({
         code: 'custom',
@@ -33,6 +30,9 @@ const formSchema = z
   });
 
 export function useUploadReport() {
+  // ✅ NEW: mode
+  const [mode, setMode] = useState('single'); // 'single' | 'receipt'
+
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [ocrText, setOcrText] = useState('');
@@ -43,7 +43,6 @@ export function useUploadReport() {
   const [saveMsg, setSaveMsg] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  // ✅ receipt 관련 state 최소 추가
   const [receiptItems, setReceiptItems] = useState([]);
   const [selectedReceiptIndex, setSelectedReceiptIndex] = useState(0);
 
@@ -75,7 +74,8 @@ export function useUploadReport() {
     [manualName, productName],
   );
 
-  const isReceipt = receiptItems.length >= 2;
+  // ✅ IMPORTANT: isReceipt는 "receiptItems로 추측"이 아니라 mode가 기준이어야 함
+  const isReceipt = mode === 'receipt';
 
   const storesQuery = useQuery({
     queryKey: ['stores'],
@@ -104,15 +104,15 @@ export function useUploadReport() {
   }, [setValue, storeName, storesQuery.data]);
 
   const ocrMutation = useMutation({
-    mutationFn: async (file) => {
+    mutationFn: async ({ file, mode }) => {
       const form = new FormData();
       form.append('image', file);
 
       const data = await apiPostForm('/ocr', form);
       const raw = data?.text || '';
 
-      // ✅ receipt 파싱 추가 (원본 로직은 유지)
-      const receipt = parseReceiptItems(raw) || [];
+      // ✅ mode에 따라 receipt 파싱을 "켜거나 끄기"
+      const receipt = mode === 'receipt' ? parseReceiptItems(raw) || [] : [];
 
       const prices = extractPriceCandidates(raw, 6);
       const nextPrice = prices[0] || extractBestPrice(raw);
@@ -123,26 +123,21 @@ export function useUploadReport() {
     onSuccess: ({ raw, prices, nextPrice, candidates, receipt }) => {
       setOcrText(raw);
 
-      // ✅ receiptItems 세팅
       setReceiptItems(receipt);
       setSelectedReceiptIndex(0);
 
-      // ✅ 기존 single 세팅 유지
       setPriceCandidates(prices);
       setPrice(nextPrice);
 
       setNameCandidates(candidates);
       setValue('productName', candidates[0] || '', { shouldValidate: true });
 
-      // ✅ receipt가 있으면, UI 기본 선택값을 "첫 아이템"으로 맞춰주기
-      if (receipt && receipt.length >= 2) {
+      // ✅ receipt mode일 때만 첫번째 아이템으로 세팅
+      if (mode === 'receipt' && receipt && receipt.length > 0) {
         const first = receipt[0];
         if (first?.price_display) setPrice(first.price_display);
         else if (first?.price != null) setPrice(`$${first.price}`);
-
-        if (first?.name) {
-          setValue('productName', first.name, { shouldValidate: true });
-        }
+        if (first?.name) setValue('productName', first.name, { shouldValidate: true });
       }
     },
     onError: (e) => {
@@ -157,7 +152,6 @@ export function useUploadReport() {
     },
   });
 
-  // ✅ 업로드 mutation: price를 "state price"만 쓰지 말고 values.price를 받도록 최소 수정
   const uploadMutation = useMutation({
     mutationFn: async ({ file, values }) => {
       const form = new FormData();
@@ -165,8 +159,6 @@ export function useUploadReport() {
 
       form.append('storeName', values.storeName.trim());
       form.append('productName', (values.productName || '').trim());
-
-      // ✅ 핵심: receipt loop에서 각 아이템 price를 넣을 수 있게
       form.append('price', (values.price ?? price) || '');
 
       if (values.unit?.trim()) form.append('unit', values.unit.trim());
@@ -174,9 +166,7 @@ export function useUploadReport() {
 
       return apiPostForm('/report', form);
     },
-    onSuccess: () => {
-      setSaveMsg('✅ Upload complete! Redirecting…');
-    },
+    onSuccess: () => setSaveMsg('✅ Upload complete! Redirecting…'),
     onError: (e) => {
       console.error(e);
       setSaveMsg('❌ Upload failed. Please try again.');
@@ -190,6 +180,7 @@ export function useUploadReport() {
     setPickedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
 
+    // reset view states
     setOcrText('');
     setPrice('');
     setPriceCandidates([]);
@@ -202,12 +193,30 @@ export function useUploadReport() {
     setSaveMsg('');
     setSubmitted(false);
 
-    ocrMutation.mutate(file);
+    // ✅ mode 포함해서 OCR
+    ocrMutation.mutate({ file, mode });
 
     e.target.value = '';
   };
 
-  // ✅ receipt item 선택 (UI에서 클릭 시 해당 아이템 값으로 price/name 채워줌)
+  // ✅ mode 바꾸면 (사진 선택 전) 상태를 한번 정리해주는게 UX 좋음
+  useEffect(() => {
+    // 이미 파일이 선택된 상태에서 mode 바꾸면 혼란 생김 → 초기화 추천
+    // (원치 않으면 이 블록 삭제해도 됨)
+    if (!pickedFile) {
+      setOcrText('');
+      setPrice('');
+      setPriceCandidates([]);
+      setNameCandidates([]);
+      setReceiptItems([]);
+      setSelectedReceiptIndex(0);
+      setValue('manualName', '');
+      setValue('productName', '');
+      setSaveMsg('');
+      setSubmitted(false);
+    }
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const selectReceiptItem = (idx) => {
     setSelectedReceiptIndex(idx);
     const it = receiptItems[idx];
@@ -247,8 +256,8 @@ export function useUploadReport() {
 
   const missingFile = !pickedFile;
 
-  // ✅ receipt 모드에서는 "단일 price/finalName"을 강제하지 않고 receiptItems가 있으면 OK로
-  const missingPrice = !isReceipt ? !price : receiptItems.length === 0;
+  // ✅ mode 기준으로 missingPrice 결정
+  const missingPrice = mode === 'single' ? !price : receiptItems.length === 0;
 
   const canUpload =
     !!pickedFile &&
@@ -256,14 +265,11 @@ export function useUploadReport() {
     !uploadMutation.isPending &&
     !isSubmitting &&
     (
-      // single
-      (!isReceipt && !!price && !!finalName) ||
-      // receipt: receiptItems에 name+price가 있는 애들이 2개 이상이면 업로드 가능
-      (isReceipt &&
+      (mode === 'single' && !!price && !!finalName) ||
+      (mode === 'receipt' &&
         receiptItems.filter((it) => !!it?.name && (it?.price_display || it?.price != null)).length >= 2)
     );
 
-  // ✅ 핵심: receipt면 "4개 전부 저장"
   const uploadReport = handleSubmit(
     async (values) => {
       setSubmitted(true);
@@ -271,8 +277,7 @@ export function useUploadReport() {
 
       setSaveMsg('');
 
-      // receipt bulk 저장
-      if (isReceipt) {
+      if (mode === 'receipt') {
         const itemsToSave = receiptItems.filter(
           (it) => !!it?.name && (it?.price_display || it?.price != null),
         );
@@ -283,11 +288,9 @@ export function useUploadReport() {
         }
 
         try {
-          // 같은 영수증 사진을 item 수만큼 반복 업로드 (서버 수정 없이 가능)
           for (let i = 0; i < itemsToSave.length; i++) {
             const it = itemsToSave[i];
-            const itemPrice =
-              it.price_display || (it.price != null ? `$${it.price}` : '');
+            const itemPrice = it.price_display || (it.price != null ? `$${it.price}` : '');
 
             await uploadMutation.mutateAsync({
               file: pickedFile,
@@ -308,13 +311,12 @@ export function useUploadReport() {
         }
       }
 
-      // single 저장 (원본 그대로)
       await uploadMutation.mutateAsync({
         file: pickedFile,
         values: {
           ...values,
           productName: finalName,
-          price, // 그대로
+          price,
         },
       });
     },
@@ -322,6 +324,10 @@ export function useUploadReport() {
   );
 
   return {
+    // ✅ expose mode
+    mode,
+    setMode,
+
     previewUrl,
     ocrText,
     loading: ocrMutation.isPending,
@@ -329,7 +335,6 @@ export function useUploadReport() {
     stores: storesQuery.data || [],
     storesLoading: storesQuery.isLoading,
 
-    // single item
     price,
     setPrice,
     priceCandidates,
@@ -337,9 +342,7 @@ export function useUploadReport() {
     nameCandidates,
     storeName,
 
-    // receipt
     receiptItems,
-    isReceipt,
     selectedReceiptIndex,
     selectReceiptItem,
 
