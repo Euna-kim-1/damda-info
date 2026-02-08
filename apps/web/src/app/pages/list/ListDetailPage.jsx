@@ -21,7 +21,6 @@ import {
 import BackButton from '../../../shared/ui/buttons/BackButton';
 import DeleteItemButton from '../../../shared/ui/buttons/DeleteItemButton';
 import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
-import SwipeableRow from '../../../shared/ui/SwipeableRow';
 import ListConfirmDialog from './ListConfirmDialog';
 
 import {
@@ -222,99 +221,93 @@ const ListDetailPage = () => {
               overflow: 'hidden',
             }}
           >
-            <SwipeableRow
-              onSwipeDelete={() => {
-                openConfirm(item);
-              }}
-            >
-              <ListItemButton
-                onClick={() => toggle(item)}
-                disableRipple
-                disableTouchRipple
-                sx={(theme) => ({
-                  alignItems: 'center',
+            <ListItemButton
+              onClick={() => toggle(item)}
+              disableRipple
+              disableTouchRipple
+              sx={(theme) => ({
+                alignItems: 'center',
+                bgcolor: item.checked
+                  ? theme.palette.secondary.light
+                  : theme.palette.background.paper,
+                color: item.checked
+                  ? theme.palette.secondary.contrastText
+                  : theme.palette.secondary.dark,
+                borderRadius: 999,
+                border: item.checked
+                  ? '1px solid transparent'
+                  : `1px solid ${theme.palette.secondary.light}`,
+                px: 2,
+                py: 1.1,
+                boxShadow: item.checked
+                  ? `0 10px 22px ${theme.palette.secondary.light}33`
+                  : `0 6px 14px ${theme.palette.primary.main}12`,
+                '&:hover': {
                   bgcolor: item.checked
                     ? theme.palette.secondary.light
                     : theme.palette.background.paper,
-                  color: item.checked
-                    ? theme.palette.secondary.contrastText
-                    : theme.palette.secondary.dark,
-                  borderRadius: 999,
-                  border: item.checked
-                    ? '1px solid transparent'
-                    : `1px solid ${theme.palette.secondary.light}`,
-                  px: 2,
-                  py: 1.1,
-                  boxShadow: item.checked
-                    ? `0 10px 22px ${theme.palette.secondary.light}33`
-                    : `0 6px 14px ${theme.palette.primary.main}12`,
-                  '&:hover': {
-                    bgcolor: item.checked
-                      ? theme.palette.secondary.light
-                      : theme.palette.background.paper,
-                  },
-                  '&.Mui-focusVisible': {
-                    bgcolor: item.checked
-                      ? theme.palette.secondary.light
-                      : theme.palette.background.paper,
-                  },
-                  '&:active': {
-                    bgcolor: item.checked
-                      ? theme.palette.secondary.light
-                      : theme.palette.background.paper,
-                  },
-                })}
-              >
-                <ListItemIcon sx={{ minWidth: 36 }}>
-                  <Checkbox
-                    edge="start"
-                    checked={!!item.checked}
-                    tabIndex={-1}
-                    disableRipple
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={() => toggle(item)}
-                    sx={(theme) => ({
-                      color: item.checked
-                        ? theme.palette.secondary.contrastText
-                        : theme.palette.secondary.dark,
-                      '&.Mui-checked': {
-                        color: theme.palette.secondary.contrastText,
-                      },
-                    })}
-                  />
-                </ListItemIcon>
-                <ListItemText
-                  primary={
+                },
+                '&.Mui-focusVisible': {
+                  bgcolor: item.checked
+                    ? theme.palette.secondary.light
+                    : theme.palette.background.paper,
+                },
+                '&:active': {
+                  bgcolor: item.checked
+                    ? theme.palette.secondary.light
+                    : theme.palette.background.paper,
+                },
+              })}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <Checkbox
+                  edge="start"
+                  checked={!!item.checked}
+                  tabIndex={-1}
+                  disableRipple
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={() => toggle(item)}
+                  sx={(theme) => ({
+                    color: item.checked
+                      ? theme.palette.secondary.contrastText
+                      : theme.palette.secondary.dark,
+                    '&.Mui-checked': {
+                      color: theme.palette.secondary.contrastText,
+                    },
+                  })}
+                />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography
+                    sx={{
+                      textDecoration: item.checked ? 'line-through' : 'none',
+                    }}
+                  >
+                    {item.name}
+                  </Typography>
+                }
+                secondary={
+                  item.note ? (
                     <Typography
-                      sx={{
-                        textDecoration: item.checked ? 'line-through' : 'none',
-                      }}
+                      variant="body2"
+                      sx={(theme) => ({
+                        color: item.checked
+                          ? 'rgba(255,255,255,0.75)'
+                          : theme.palette.secondary.dark,
+                      })}
                     >
-                      {item.name}
+                      {item.note}
                     </Typography>
-                  }
-                  secondary={
-                    item.note ? (
-                      <Typography
-                        variant="body2"
-                        sx={(theme) => ({
-                          color: item.checked
-                            ? 'rgba(255,255,255,0.75)'
-                            : theme.palette.secondary.dark,
-                        })}
-                      >
-                        {item.note}
-                      </Typography>
-                    ) : null
-                  }
-                />
-                <DeleteItemButton
-                  onDelete={() => openConfirm(item)}
-                  disabled={false}
-                  iconColor={item.checked ? 'common.white' : 'secondary.dark'}
-                />
-              </ListItemButton>
-            </SwipeableRow>
+                  ) : null
+                }
+              />
+              <DeleteItemButton
+                onDelete={() => openConfirm(item)}
+                disabled={false}
+                iconColor={item.checked ? 'common.white' : 'secondary.dark'}
+              />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>

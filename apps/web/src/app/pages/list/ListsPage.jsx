@@ -12,7 +12,6 @@ import {
 import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined';
 import DeleteItemButton from '../../../shared/ui/buttons/DeleteItemButton';
 import ListConfirmDialog from './ListConfirmDialog';
-import SwipeableRow from '../../../shared/ui/SwipeableRow';
 import {
   useCreateList,
   useDeleteList,
@@ -288,71 +287,64 @@ const ListsPage = () => {
               overflow: 'hidden',
             }}
           >
-            <SwipeableRow
-              onSwipeDelete={() => {
-                openConfirm(list);
-              }}
-              disabled={deleteMut.isPending}
+            <ListItemButton
+              onClick={() => navigate(`/lists/${list.id}`)}
+              sx={(theme) => ({
+                alignItems: 'center',
+                gap: 1.5,
+                px: 2,
+                py: 1.75,
+                borderRadius: 999,
+                bgcolor: 'primary.light',
+                color: 'primary.contrastText',
+                boxShadow: `0 10px 22px ${theme.palette.primary.main}33`,
+                '&:hover': {
+                  bgcolor: 'primary.main',
+                },
+              })}
             >
-              <ListItemButton
-                onClick={() => navigate(`/lists/${list.id}`)}
+              <Box
                 sx={(theme) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  bgcolor: 'background.paper',
+                  color: 'primary.dark',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: 1.5,
-                  px: 2,
-                  py: 1.75,
-                  borderRadius: 999,
-                  bgcolor: 'primary.light',
-                  color: 'primary.contrastText',
-                  boxShadow: `0 10px 22px ${theme.palette.primary.main}33`,
-                  '&:hover': {
-                    bgcolor: 'primary.main',
-                  },
+                  justifyContent: 'center',
+                  boxShadow: `0 6px 14px ${theme.palette.primary.main}22`,
+                  flexShrink: 0,
                 })}
               >
-                <Box
-                  sx={(theme) => ({
-                    width: 44,
-                    height: 44,
-                    borderRadius: '50%',
-                    bgcolor: 'background.paper',
-                    color: 'primary.dark',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: `0 6px 14px ${theme.palette.primary.main}22`,
-                    flexShrink: 0,
-                  })}
-                >
-                  <ListAltOutlinedIcon fontSize="small" />
-                </Box>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <ListItemText
-                    primary={
-                      <Typography fontWeight={700} noWrap lineHeight={1.2}>
-                        {list.title}
-                      </Typography>
-                    }
-                    secondary={
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'text.secondary', lineHeight: 1.1 }}
-                      >
-                        Updated{' '}
-                        {dayjs(list.updated_at || list.created_at).format(
-                          'MMM D',
-                        )}
-                      </Typography>
-                    }
-                    sx={{ m: 0 }}
-                  />
-                </Box>
-                <DeleteItemButton
-                  onDelete={() => openConfirm(list)}
-                  disabled={deleteMut.isPending}
+                <ListAltOutlinedIcon fontSize="small" />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <ListItemText
+                  primary={
+                    <Typography fontWeight={700} noWrap lineHeight={1.2}>
+                      {list.title}
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography
+                      variant="caption"
+                      sx={{ color: 'text.secondary', lineHeight: 1.1 }}
+                    >
+                      Updated{' '}
+                      {dayjs(list.updated_at || list.created_at).format(
+                        'MMM D',
+                      )}
+                    </Typography>
+                  }
+                  sx={{ m: 0 }}
                 />
-              </ListItemButton>
-            </SwipeableRow>
+              </Box>
+              <DeleteItemButton
+                onDelete={() => openConfirm(list)}
+                disabled={deleteMut.isPending}
+              />
+            </ListItemButton>
           </Box>
         ))}
       </List>
