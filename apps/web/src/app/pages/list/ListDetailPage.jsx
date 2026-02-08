@@ -1,14 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
-  Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -48,10 +42,8 @@ const ListDetailPage = () => {
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [confirmBulk, setConfirmBulk] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
 
   const [name, setName] = useState('');
-  const addButtonRef = useRef(null);
 
   const canAdd = name.trim().length > 0 && !createItemMut.isPending;
 
@@ -61,7 +53,6 @@ const ListDetailPage = () => {
     if (!n) return;
     await createItemMut.mutateAsync({ name: n, note: null });
     setName('');
-    setAddOpen(false);
   };
 
   const toggle = (item) => {
@@ -163,47 +154,58 @@ const ListDetailPage = () => {
         <Typography variant="h5" sx={{ flex: 1, textAlign: 'center' }}>
           {listTitle}
         </Typography>
-        <IconButton
-          ref={addButtonRef}
-          onClick={() => setAddOpen(true)}
-          sx={(theme) => ({
-            bgcolor: theme.palette.secondary.light,
-            color: theme.palette.secondary.contrastText,
-            '&:hover': { bgcolor: theme.palette.secondary.light },
-          })}
-        >
-          <PlaylistAddOutlinedIcon />
-        </IconButton>
+        <Box sx={{ width: 40 }} />
       </Stack>
 
-      <Dialog
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        fullWidth
-        TransitionProps={{ onExited: () => addButtonRef.current?.focus() }}
+      <Box
+        component="form"
+        onSubmit={onAdd}
+        sx={(theme) => ({
+          mb: 1.25,
+          p: 1,
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          display: 'flex',
+          gap: 0.75,
+          alignItems: 'center',
+          boxShadow: `0 6px 14px ${theme.palette.primary.main}12`,
+        })}
       >
-        <DialogTitle>Add item</DialogTitle>
-        <Box component="form" onSubmit={onAdd}>
-          <DialogContent sx={{ pt: 1 }}>
-            <TextField
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. green onions, milk, bread..."
-              size="small"
-              fullWidth
-              autoFocus
-            />
-          </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button onClick={() => setAddOpen(false)} color="inherit">
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={!canAdd}>
-              {createItemMut.isPending ? 'Adding...' : 'Add'}
-            </Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
+        <TextField
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Add an item…"
+          size="small"
+          fullWidth
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              height: 32,
+              '& fieldset': {
+                border: 'none',
+              },
+            },
+          }}
+        />
+        <PrimaryButton
+          type="submit"
+          variantStyle="primary3"
+          disabled={!canAdd}
+          aria-label="Add item"
+          sx={{
+            minWidth: 32,
+            width: 32,
+            height: 32,
+            p: 0,
+            borderRadius: 1,
+            fontSize: 18,
+            lineHeight: 1,
+          }}
+        >
+          +
+        </PrimaryButton>
+      </Box>
       {isLoading && <Typography>Loading...</Typography>}
       {isError && (
         <Typography color="error">
