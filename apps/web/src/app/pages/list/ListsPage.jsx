@@ -267,6 +267,7 @@ export default function ListsPage() {
             display: 'grid',
             gridTemplateColumns: 'repeat(7, 1fr)',
             gap: 0.5,
+            justifyItems: 'center',
           }}
         >
           {calendarCells.map((cell) => {
