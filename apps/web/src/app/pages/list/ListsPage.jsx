@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,101 +18,49 @@ import {
   useLists,
 } from '../../../features/lists/hooks';
 
-function SwipeableRow({ onSwipeDelete, disabled, children }) {
-  const startXRef = useRef(0);
-  const deltaRef = useRef(0);
-  const draggingRef = useRef(false);
-  const suppressClickRef = useRef(false);
-  const [offset, setOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DATE_TITLE_FORMAT = 'MMM/DD/YYYY';
+const DATE_TITLE_REGEX = /^[A-Z][a-z]{2}\/\d{2}\/\d{4}$/;
+const DAY_CELL_SIZE = 36;
 
-  const threshold = -80;
-  const maxOffset = -120;
-
-  function startGesture(clientX) {
-    if (disabled) return;
-    draggingRef.current = true;
-    setIsDragging(true);
-    startXRef.current = clientX;
-    deltaRef.current = 0;
+const buildCalendarCells = (monthCursor) => {
+  const start = monthCursor.startOf('month');
+  const startOffset = (start.day() + 6) % 7; // monday-first
+  const daysInMonth = monthCursor.daysInMonth();
+  const cells = [];
+  for (let i = 0; i < startOffset; i += 1) {
+    cells.push({ type: 'empty', key: `e-${i}` });
   }
-
-  function moveGesture(clientX, e) {
-    if (!draggingRef.current || disabled) return;
-    const delta = clientX - startXRef.current;
-    if (delta > 0) return;
-    deltaRef.current = delta;
-    setOffset(Math.max(delta, maxOffset));
-    if (Math.abs(delta) > 6 && e?.cancelable) {
-      e.preventDefault();
+  for (let d = 1; d <= daysInMonth; d += 1) {
+    cells.push({
+      type: 'day',
+      key: `d-${d}`,
+      date: start.date(d),
+    });
+  }
+  const remainder = cells.length % 7;
+  if (remainder !== 0) {
+    const pad = 7 - remainder;
+    for (let i = 0; i < pad; i += 1) {
+      cells.push({ type: 'empty', key: `p-${i}` });
     }
   }
+  return cells;
+};
 
-  function finishGesture() {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    setIsDragging(false);
-    const delta = deltaRef.current;
-    if (Math.abs(delta) > 10) {
-      suppressClickRef.current = true;
-      setTimeout(() => {
-        suppressClickRef.current = false;
-      }, 0);
-    }
-    setOffset(0);
-    if (delta < threshold && !disabled) onSwipeDelete?.();
-  }
+const getCreatedDateSet = (lists) => {
+  const set = new Set();
+  (lists ?? []).forEach((list) => {
+    const title = String(list.title || '').trim();
+    if (!DATE_TITLE_REGEX.test(title)) return;
+    const d = dayjs(title, DATE_TITLE_FORMAT, true);
+    if (!d.isValid()) return;
+    set.add(d.format('YYYY-MM-DD'));
+  });
+  return set;
+};
 
-  function handlePointerDown(e) {
-    if (e.pointerType && e.pointerType !== 'touch') return;
-    startGesture(e.clientX, e);
-    if (e.currentTarget.setPointerCapture) {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
-  }
-
-  function handlePointerMove(e) {
-    if (e.pointerType && e.pointerType !== 'touch') return;
-    moveGesture(e.clientX, e);
-  }
-
-  return (
-    <Box
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={finishGesture}
-      onPointerCancel={finishGesture}
-      onPointerLeave={(e) => {
-        if (e.pointerType === 'mouse') finishGesture();
-      }}
-      onTouchStart={(e) => {
-        if (e.touches?.[0]) startGesture(e.touches[0].clientX, e);
-      }}
-      onTouchMove={(e) => {
-        if (e.touches?.[0]) moveGesture(e.touches[0].clientX, e);
-      }}
-      onTouchEnd={finishGesture}
-      onTouchCancel={finishGesture}
-      onClickCapture={(e) => {
-        if (suppressClickRef.current) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      sx={{
-        width: '100%',
-        transform: `translateX(${offset}px)`,
-        transition: isDragging ? 'none' : 'transform 120ms ease-out',
-        touchAction: 'pan-y',
-        userSelect: 'none',
-      }}
-    >
-      {children}
-    </Box>
-  );
-}
-
-export default function ListsPage() {
+const ListsPage = () => {
   const navigate = useNavigate();
   const { data: lists, isLoading, isError, error } = useLists();
   const createMut = useCreateList();
@@ -125,68 +73,37 @@ export default function ListsPage() {
   const [selectedDate, setSelectedDate] = useState(null);
 
   const sorted = useMemo(() => lists ?? [], [lists]);
-  const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const today = dayjs();
 
-  const calendarCells = useMemo(() => {
-    const start = monthCursor.startOf('month');
-    const startOffset = (start.day() + 6) % 7; // monday-first
-    const daysInMonth = monthCursor.daysInMonth();
-    const cells = [];
-    for (let i = 0; i < startOffset; i += 1) {
-      cells.push({ type: 'empty', key: `e-${i}` });
-    }
-    for (let d = 1; d <= daysInMonth; d += 1) {
-      cells.push({
-        type: 'day',
-        key: `d-${d}`,
-        date: start.date(d),
-      });
-    }
-    const remainder = cells.length % 7;
-    if (remainder !== 0) {
-      const pad = 7 - remainder;
-      for (let i = 0; i < pad; i += 1) {
-        cells.push({ type: 'empty', key: `p-${i}` });
-      }
-    }
-    return cells;
-  }, [monthCursor]);
+  const calendarCells = useMemo(
+    () => buildCalendarCells(monthCursor),
+    [monthCursor],
+  );
+  const createdDateSet = useMemo(() => getCreatedDateSet(lists), [lists]);
 
-  const createdDateSet = useMemo(() => {
-    const set = new Set();
-    (lists ?? []).forEach((list) => {
-      const title = String(list.title || '').trim();
-      if (!/^\d{4}\/\d{2}\/\d{2}$/.test(title)) return;
-      const d = dayjs(title, 'YYYY/MM/DD', true);
-      if (!d.isValid()) return;
-      set.add(d.format('YYYY-MM-DD'));
-    });
-    return set;
-  }, [lists]);
-
-  function openConfirm(list) {
+  const openConfirm = (list) => {
     setConfirmTarget(list);
-  }
+  };
 
-  function closeConfirm() {
+  const closeConfirm = () => {
     setConfirmTarget(null);
-  }
+  };
 
-  function handleConfirmDelete() {
+  const handleConfirmDelete = () => {
     if (!confirmTarget) return;
     deleteMut.mutate(confirmTarget.id, { onSettled: closeConfirm });
-  }
+  };
 
-  function handleDateSelect(date) {
+  const handleDateSelect = (date) => {
     setSelectedDate(date);
-  }
+  };
 
-  async function handleCreateSelected() {
+  const handleCreateSelected = async () => {
     if (!selectedDate || createMut.isPending) return;
-    const title = dayjs(selectedDate).format('YYYY/MM/DD');
+    const title = dayjs(selectedDate).format(DATE_TITLE_FORMAT);
     await createMut.mutateAsync(title);
     setSelectedDate(null);
-  }
+  };
 
   return (
     <Box sx={{ px: 2, py: 2, maxWidth: 720, mx: 'auto' }}>
@@ -231,9 +148,7 @@ export default function ListsPage() {
             <Box
               component="button"
               type="button"
-              onClick={() =>
-                setMonthCursor((m) => dayjs(m).add(1, 'month'))
-              }
+              onClick={() => setMonthCursor((m) => dayjs(m).add(1, 'month'))}
               sx={{
                 border: 'none',
                 bgcolor: 'transparent',
@@ -258,7 +173,7 @@ export default function ListsPage() {
             textAlign: 'center',
           }}
         >
-          {weekdays.map((d) => (
+          {WEEKDAYS.map((d) => (
             <Box key={d}>{d}</Box>
           ))}
         </Box>
@@ -267,13 +182,14 @@ export default function ListsPage() {
             display: 'grid',
             gridTemplateColumns: 'repeat(7, 1fr)',
             gap: 0.5,
+            justifyItems: 'center',
           }}
         >
           {calendarCells.map((cell) => {
             if (cell.type === 'empty') {
-              return <Box key={cell.key} sx={{ height: 36 }} />;
+              return <Box key={cell.key} sx={{ height: DAY_CELL_SIZE }} />;
             }
-            const isToday = dayjs(cell.date).isSame(dayjs(), 'day');
+            const isToday = dayjs(cell.date).isSame(today, 'day');
             const isSelected =
               selectedDate && dayjs(cell.date).isSame(selectedDate, 'day');
             const hasList = createdDateSet.has(
@@ -286,8 +202,8 @@ export default function ListsPage() {
                 type="button"
                 onClick={() => handleDateSelect(cell.date)}
                 sx={(theme) => ({
-                  width: 36,
-                  height: 36,
+                  width: DAY_CELL_SIZE,
+                  height: DAY_CELL_SIZE,
                   borderRadius: 1.25,
                   border: 'none',
                   bgcolor: isSelected
@@ -349,7 +265,7 @@ export default function ListsPage() {
                 },
               })}
             >
-              Create list ({dayjs(selectedDate).format('YYYY/MM/DD')})
+              Create list ({dayjs(selectedDate).format(DATE_TITLE_FORMAT)})
             </Box>
           </Box>
         )}
@@ -371,68 +287,64 @@ export default function ListsPage() {
               overflow: 'hidden',
             }}
           >
-            <SwipeableRow
-              onSwipeDelete={() => {
-                openConfirm(list);
-              }}
-              disabled={deleteMut.isPending}
+            <ListItemButton
+              onClick={() => navigate(`/lists/${list.id}`)}
+              sx={(theme) => ({
+                alignItems: 'center',
+                gap: 1.5,
+                px: 2,
+                py: 1.75,
+                borderRadius: 999,
+                bgcolor: 'primary.light',
+                color: 'primary.contrastText',
+                boxShadow: `0 10px 22px ${theme.palette.primary.main}33`,
+                '&:hover': {
+                  bgcolor: 'primary.main',
+                },
+              })}
             >
-              <ListItemButton
-                onClick={() => navigate(`/lists/${list.id}`)}
+              <Box
                 sx={(theme) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  bgcolor: 'background.paper',
+                  color: 'primary.dark',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: 1.5,
-                  px: 2,
-                  py: 1.75,
-                  borderRadius: 999,
-                  bgcolor: 'primary.light',
-                  color: 'primary.contrastText',
-                  boxShadow: `0 10px 22px ${theme.palette.primary.main}33`,
-                  '&:hover': {
-                    bgcolor: 'primary.main',
-                  },
+                  justifyContent: 'center',
+                  boxShadow: `0 6px 14px ${theme.palette.primary.main}22`,
+                  flexShrink: 0,
                 })}
               >
-                <Box
-                  sx={(theme) => ({
-                    width: 44,
-                    height: 44,
-                    borderRadius: '50%',
-                    bgcolor: 'background.paper',
-                    color: 'primary.dark',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: `0 6px 14px ${theme.palette.primary.main}22`,
-                    flexShrink: 0,
-                  })}
-                >
-                  <ListAltOutlinedIcon fontSize="small" />
-                </Box>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <ListItemText
-                    primary={
-                      <Typography fontWeight={700} noWrap>
-                        {list.title}
-                      </Typography>
-                    }
-                    secondary={
-                      <Typography
-                        variant="body2"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        Updated {dayjs(list.updated_at || list.created_at).format('MMM D')}
-                      </Typography>
-                    }
-                    sx={{ m: 0 }}
-                  />
-                </Box>
-                <DeleteItemButton
-                  onDelete={() => openConfirm(list)}
-                  disabled={deleteMut.isPending}
+                <ListAltOutlinedIcon fontSize="small" />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <ListItemText
+                  primary={
+                    <Typography fontWeight={700} noWrap lineHeight={1.2}>
+                      {list.title}
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography
+                      variant="caption"
+                      sx={{ color: 'text.secondary', lineHeight: 1.1 }}
+                    >
+                      Updated{' '}
+                      {dayjs(list.updated_at || list.created_at).format(
+                        'MMM D',
+                      )}
+                    </Typography>
+                  }
+                  sx={{ m: 0 }}
                 />
-              </ListItemButton>
-            </SwipeableRow>
+              </Box>
+              <DeleteItemButton
+                onDelete={() => openConfirm(list)}
+                disabled={deleteMut.isPending}
+              />
+            </ListItemButton>
           </Box>
         ))}
       </List>
@@ -445,4 +357,6 @@ export default function ListsPage() {
       />
     </Box>
   );
-}
+};
+
+export default ListsPage;

@@ -1,12 +1,7 @@
 import { Stack, Typography } from '@mui/material';
+import { formatPrice } from '../../utils/formatters';
 
-function money(n) {
-  const num = Number(n);
-  if (Number.isNaN(num)) return '';
-  return `$${num.toFixed(2)}`;
-}
-
-export default function ReportCardDetails({ report }) {
+const ReportCardDetails = ({ report }) => {
   return (
     <Stack spacing={0.4} sx={{ minWidth: 0 }}>
       <Typography sx={{ fontWeight: 800 }} noWrap>
@@ -22,8 +17,10 @@ export default function ReportCardDetails({ report }) {
       </Typography>
 
       <Typography sx={{ fontWeight: 900, mt: 0.5 }}>
-        {money(report.price)}
+        {formatPrice(report.price)}
       </Typography>
     </Stack>
   );
-}
+};
+
+export default ReportCardDetails;

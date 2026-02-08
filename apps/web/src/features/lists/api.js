@@ -1,59 +1,61 @@
-import { apiDelete, apiGet, apiPatchJson, apiPostJson } from "../../shared/api/client";
-import { getDeviceId } from "./deviceId";
+import { apiDelete, apiGet, apiPatchJson, apiPostJson } from '../../shared/api/client';
+import { getDeviceId } from './deviceId';
+
+const appendDeviceIdQuery = (path) => {
+  const deviceId = encodeURIComponent(getDeviceId());
+  const joiner = path.includes('?') ? '&' : '?';
+  return `${path}${joiner}device_id=${deviceId}`;
+};
 
 // Lists
-export async function fetchLists() {
-    const deviceId = getDeviceId();
-    const data = await apiGet(`/lists?device_id=${encodeURIComponent(deviceId)}`);
-    return data.lists;
-}
+export const fetchLists = async () => {
+  const data = await apiGet(appendDeviceIdQuery('/lists'));
+  return data.lists;
+};
 
-export async function createList(title) {
-    const deviceId = getDeviceId();
-    const data = await apiPostJson("/lists", { device_id: deviceId, title });
-    return data.list;
-}
+export const createList = async (title) => {
+  const deviceId = getDeviceId();
+  const data = await apiPostJson('/lists', { device_id: deviceId, title });
+  return data.list;
+};
 
-export async function deleteList(listId) {
-    const deviceId = getDeviceId();
-    const data = await apiDelete(
-        `/lists/${encodeURIComponent(listId)}?device_id=${encodeURIComponent(deviceId)}`
-    );
-    return data.list;
-}
+export const deleteList = async (listId) => {
+  const data = await apiDelete(
+    appendDeviceIdQuery(`/lists/${encodeURIComponent(listId)}`),
+  );
+  return data.list;
+};
 
 // Items
-export async function fetchListItems(listId) {
-    const deviceId = getDeviceId();
-    const data = await apiGet(
-        `/lists/${encodeURIComponent(listId)}/items?device_id=${encodeURIComponent(deviceId)}`
-    );
-    return data.items;
-}
+export const fetchListItems = async (listId) => {
+  const data = await apiGet(
+    appendDeviceIdQuery(`/lists/${encodeURIComponent(listId)}/items`),
+  );
+  return data.items;
+};
 
-export async function createListItem(listId, name, note = null) {
-    const deviceId = getDeviceId();
-    const data = await apiPostJson(`/lists/${encodeURIComponent(listId)}/items`, {
-        device_id: deviceId,
-        name,
-        note,
-    });
-    return data.item;
-}
+export const createListItem = async (listId, name, note = null) => {
+  const deviceId = getDeviceId();
+  const data = await apiPostJson(`/lists/${encodeURIComponent(listId)}/items`, {
+    device_id: deviceId,
+    name,
+    note,
+  });
+  return data.item;
+};
 
-export async function updateListItem(itemId, patch) {
-    const deviceId = getDeviceId();
-    const data = await apiPatchJson(`/items/${encodeURIComponent(itemId)}`, {
-        device_id: deviceId,
-        ...patch,
-    });
-    return data.item;
-}
+export const updateListItem = async (itemId, patch) => {
+  const deviceId = getDeviceId();
+  const data = await apiPatchJson(`/items/${encodeURIComponent(itemId)}`, {
+    device_id: deviceId,
+    ...patch,
+  });
+  return data.item;
+};
 
-export async function deleteListItem(itemId) {
-    const deviceId = getDeviceId();
-    const data = await apiDelete(
-        `/items/${encodeURIComponent(itemId)}?device_id=${encodeURIComponent(deviceId)}`
-    );
-    return data.item;
-}
+export const deleteListItem = async (itemId) => {
+  const data = await apiDelete(
+    appendDeviceIdQuery(`/items/${encodeURIComponent(itemId)}`),
+  );
+  return data.item;
+};

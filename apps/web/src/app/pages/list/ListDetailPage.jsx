@@ -1,14 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
-  Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -34,102 +28,9 @@ import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 import DeleteSweepOutlinedIcon from '@mui/icons-material/DeleteSweepOutlined';
 import RestartAltOutlinedIcon from '@mui/icons-material/RestartAltOutlined';
 
-function SwipeableRow({ onSwipeDelete, children }) {
-  const startXRef = useRef(0);
-  const deltaRef = useRef(0);
-  const draggingRef = useRef(false);
-  const suppressClickRef = useRef(false);
-  const [offset, setOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const threshold = -80;
-  const maxOffset = -120;
-
-  function startGesture(clientX) {
-    draggingRef.current = true;
-    setIsDragging(true);
-    startXRef.current = clientX;
-    deltaRef.current = 0;
-  }
-
-  function moveGesture(clientX, e) {
-    if (!draggingRef.current) return;
-    const delta = clientX - startXRef.current;
-    if (delta > 0) return;
-    deltaRef.current = delta;
-    setOffset(Math.max(delta, maxOffset));
-    if (Math.abs(delta) > 6 && e?.cancelable) {
-      e.preventDefault();
-    }
-  }
-
-  function finishGesture() {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    setIsDragging(false);
-    const delta = deltaRef.current;
-    if (Math.abs(delta) > 10) {
-      suppressClickRef.current = true;
-      setTimeout(() => {
-        suppressClickRef.current = false;
-      }, 0);
-    }
-    setOffset(0);
-    if (delta < threshold) onSwipeDelete?.();
-  }
-
-  function handlePointerDown(e) {
-    if (e.pointerType && e.pointerType !== 'touch') return;
-    startGesture(e.clientX, e);
-    if (e.currentTarget.setPointerCapture) {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
-  }
-
-  function handlePointerMove(e) {
-    if (e.pointerType && e.pointerType !== 'touch') return;
-    moveGesture(e.clientX, e);
-  }
-
-  return (
-    <Box
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={finishGesture}
-      onPointerCancel={finishGesture}
-      onPointerLeave={(e) => {
-        if (e.pointerType === 'mouse') finishGesture();
-      }}
-      onTouchStart={(e) => {
-        if (e.touches?.[0]) startGesture(e.touches[0].clientX, e);
-      }}
-      onTouchMove={(e) => {
-        if (e.touches?.[0]) moveGesture(e.touches[0].clientX, e);
-      }}
-      onTouchEnd={finishGesture}
-      onTouchCancel={finishGesture}
-      onClickCapture={(e) => {
-        if (suppressClickRef.current) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      sx={{
-        width: '100%',
-        transform: `translateX(${offset}px)`,
-        transition: isDragging ? 'none' : 'transform 120ms ease-out',
-        touchAction: 'pan-y',
-        userSelect: 'none',
-      }}
-    >
-      {children}
-    </Box>
-  );
-}
-
 const NAV_HEIGHT = 64;
 
-export default function ListDetailPage() {
+const ListDetailPage = () => {
   const navigate = useNavigate();
   const { listId } = useParams();
 
@@ -141,28 +42,25 @@ export default function ListDetailPage() {
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [confirmBulk, setConfirmBulk] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
 
   const [name, setName] = useState('');
-  const addButtonRef = useRef(null);
 
   const canAdd = name.trim().length > 0 && !createItemMut.isPending;
 
-  async function onAdd(e) {
+  const onAdd = async (e) => {
     e.preventDefault();
     const n = name.trim();
     if (!n) return;
     await createItemMut.mutateAsync({ name: n, note: null });
     setName('');
-    setAddOpen(false);
-  }
+  };
 
-  function toggle(item) {
+  const toggle = (item) => {
     updateItemMut.mutate({
       itemId: item.id,
       patch: { checked: !item.checked },
     });
-  }
+  };
 
   const sorted = useMemo(() => items ?? [], [items]);
 
@@ -179,38 +77,38 @@ export default function ListDetailPage() {
     return fromLists || fromItems || 'List';
   }, [items, listId, lists]);
 
-  function openConfirm(item) {
+  const openConfirm = (item) => {
     setConfirmTarget(item);
-  }
+  };
 
-  function closeConfirm() {
+  const closeConfirm = () => {
     setConfirmTarget(null);
-  }
+  };
 
-  function handleConfirmDelete() {
+  const handleConfirmDelete = () => {
     if (!confirmTarget) return;
     deleteItemMut.mutate(confirmTarget.id, { onSettled: closeConfirm });
-  }
+  };
 
-  function openBulkConfirm() {
+  const openBulkConfirm = () => {
     if (checkedItems.length === 0) return;
     setConfirmBulk(true);
-  }
+  };
 
-  function openResetConfirm() {
+  const openResetConfirm = () => {
     if (checkedItems.length === 0) return;
     setConfirmReset(true);
-  }
+  };
 
-  function closeBulkConfirm() {
+  const closeBulkConfirm = () => {
     setConfirmBulk(false);
-  }
+  };
 
-  function closeResetConfirm() {
+  const closeResetConfirm = () => {
     setConfirmReset(false);
-  }
+  };
 
-  async function handleBulkDelete() {
+  const handleBulkDelete = async () => {
     if (checkedItems.length === 0) {
       closeBulkConfirm();
       return;
@@ -219,9 +117,9 @@ export default function ListDetailPage() {
       checkedItems.map((item) => deleteItemMut.mutateAsync(item.id)),
     );
     closeBulkConfirm();
-  }
+  };
 
-  async function handleResetChecked() {
+  const handleResetChecked = async () => {
     if (checkedItems.length === 0) return;
     await Promise.all(
       checkedItems.map((item) =>
@@ -232,7 +130,7 @@ export default function ListDetailPage() {
       ),
     );
     closeResetConfirm();
-  }
+  };
 
   return (
     <Box
@@ -256,47 +154,58 @@ export default function ListDetailPage() {
         <Typography variant="h5" sx={{ flex: 1, textAlign: 'center' }}>
           {listTitle}
         </Typography>
-        <IconButton
-          ref={addButtonRef}
-          onClick={() => setAddOpen(true)}
-          sx={(theme) => ({
-            bgcolor: theme.palette.secondary.light,
-            color: theme.palette.secondary.contrastText,
-            '&:hover': { bgcolor: theme.palette.secondary.light },
-          })}
-        >
-          <PlaylistAddOutlinedIcon />
-        </IconButton>
+        <Box sx={{ width: 40 }} />
       </Stack>
 
-      <Dialog
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        fullWidth
-        TransitionProps={{ onExited: () => addButtonRef.current?.focus() }}
+      <Box
+        component="form"
+        onSubmit={onAdd}
+        sx={(theme) => ({
+          mb: 1.25,
+          p: 1,
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          display: 'flex',
+          gap: 0.75,
+          alignItems: 'center',
+          boxShadow: `0 6px 14px ${theme.palette.primary.main}12`,
+        })}
       >
-        <DialogTitle>Add item</DialogTitle>
-        <Box component="form" onSubmit={onAdd}>
-          <DialogContent sx={{ pt: 1 }}>
-            <TextField
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. green onions, milk, bread..."
-              size="small"
-              fullWidth
-              autoFocus
-            />
-          </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button onClick={() => setAddOpen(false)} color="inherit">
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={!canAdd}>
-              {createItemMut.isPending ? 'Adding...' : 'Add'}
-            </Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
+        <TextField
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Add an item…"
+          size="small"
+          fullWidth
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              height: 32,
+              '& fieldset': {
+                border: 'none',
+              },
+            },
+          }}
+        />
+        <PrimaryButton
+          type="submit"
+          variantStyle="primary3"
+          disabled={!canAdd}
+          aria-label="Add item"
+          sx={{
+            minWidth: 32,
+            width: 32,
+            height: 32,
+            p: 0,
+            borderRadius: 1,
+            fontSize: 18,
+            lineHeight: 1,
+          }}
+        >
+          +
+        </PrimaryButton>
+      </Box>
       {isLoading && <Typography>Loading...</Typography>}
       {isError && (
         <Typography color="error">
@@ -314,99 +223,93 @@ export default function ListDetailPage() {
               overflow: 'hidden',
             }}
           >
-            <SwipeableRow
-              onSwipeDelete={() => {
-                openConfirm(item);
-              }}
-            >
-              <ListItemButton
-                onClick={() => toggle(item)}
-                disableRipple
-                disableTouchRipple
-                sx={(theme) => ({
-                  alignItems: 'center',
+            <ListItemButton
+              onClick={() => toggle(item)}
+              disableRipple
+              disableTouchRipple
+              sx={(theme) => ({
+                alignItems: 'center',
+                bgcolor: item.checked
+                  ? theme.palette.secondary.light
+                  : theme.palette.background.paper,
+                color: item.checked
+                  ? theme.palette.secondary.contrastText
+                  : theme.palette.secondary.dark,
+                borderRadius: 999,
+                border: item.checked
+                  ? '1px solid transparent'
+                  : `1px solid ${theme.palette.secondary.light}`,
+                px: 2,
+                py: 1.1,
+                boxShadow: item.checked
+                  ? `0 10px 22px ${theme.palette.secondary.light}33`
+                  : `0 6px 14px ${theme.palette.primary.main}12`,
+                '&:hover': {
                   bgcolor: item.checked
                     ? theme.palette.secondary.light
                     : theme.palette.background.paper,
-                  color: item.checked
-                    ? theme.palette.secondary.contrastText
-                    : theme.palette.secondary.dark,
-                  borderRadius: 999,
-                  border: item.checked
-                    ? '1px solid transparent'
-                    : `1px solid ${theme.palette.secondary.light}`,
-                  px: 2,
-                  py: 1.1,
-                  boxShadow: item.checked
-                    ? `0 10px 22px ${theme.palette.secondary.light}33`
-                    : `0 6px 14px ${theme.palette.primary.main}12`,
-                  '&:hover': {
-                    bgcolor: item.checked
-                      ? theme.palette.secondary.light
-                      : theme.palette.background.paper,
-                  },
-                  '&.Mui-focusVisible': {
-                    bgcolor: item.checked
-                      ? theme.palette.secondary.light
-                      : theme.palette.background.paper,
-                  },
-                  '&:active': {
-                    bgcolor: item.checked
-                      ? theme.palette.secondary.light
-                      : theme.palette.background.paper,
-                  },
-                })}
-              >
-                <ListItemIcon sx={{ minWidth: 36 }}>
-                  <Checkbox
-                    edge="start"
-                    checked={!!item.checked}
-                    tabIndex={-1}
-                    disableRipple
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={() => toggle(item)}
-                    sx={(theme) => ({
-                      color: item.checked
-                        ? theme.palette.secondary.contrastText
-                        : theme.palette.secondary.dark,
-                      '&.Mui-checked': {
-                        color: theme.palette.secondary.contrastText,
-                      },
-                    })}
-                  />
-                </ListItemIcon>
-                <ListItemText
-                  primary={
+                },
+                '&.Mui-focusVisible': {
+                  bgcolor: item.checked
+                    ? theme.palette.secondary.light
+                    : theme.palette.background.paper,
+                },
+                '&:active': {
+                  bgcolor: item.checked
+                    ? theme.palette.secondary.light
+                    : theme.palette.background.paper,
+                },
+              })}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <Checkbox
+                  edge="start"
+                  checked={!!item.checked}
+                  tabIndex={-1}
+                  disableRipple
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={() => toggle(item)}
+                  sx={(theme) => ({
+                    color: item.checked
+                      ? theme.palette.secondary.contrastText
+                      : theme.palette.secondary.dark,
+                    '&.Mui-checked': {
+                      color: theme.palette.secondary.contrastText,
+                    },
+                  })}
+                />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography
+                    sx={{
+                      textDecoration: item.checked ? 'line-through' : 'none',
+                    }}
+                  >
+                    {item.name}
+                  </Typography>
+                }
+                secondary={
+                  item.note ? (
                     <Typography
-                      sx={{
-                        textDecoration: item.checked ? 'line-through' : 'none',
-                      }}
+                      variant="body2"
+                      sx={(theme) => ({
+                        color: item.checked
+                          ? 'rgba(255,255,255,0.75)'
+                          : theme.palette.secondary.dark,
+                      })}
                     >
-                      {item.name}
+                      {item.note}
                     </Typography>
-                  }
-                  secondary={
-                    item.note ? (
-                      <Typography
-                        variant="body2"
-                        sx={(theme) => ({
-                          color: item.checked
-                            ? 'rgba(255,255,255,0.75)'
-                            : theme.palette.secondary.dark,
-                        })}
-                      >
-                        {item.note}
-                      </Typography>
-                    ) : null
-                  }
-                />
-                <DeleteItemButton
-                  onDelete={() => openConfirm(item)}
-                  disabled={false}
-                  iconColor={item.checked ? 'common.white' : 'secondary.dark'}
-                />
-              </ListItemButton>
-            </SwipeableRow>
+                  ) : null
+                }
+              />
+              <DeleteItemButton
+                onDelete={() => openConfirm(item)}
+                disabled={false}
+                iconColor={item.checked ? 'common.white' : 'secondary.dark'}
+              />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>
@@ -473,4 +376,6 @@ export default function ListDetailPage() {
       />
     </Box>
   );
-}
+};
+
+export default ListDetailPage;

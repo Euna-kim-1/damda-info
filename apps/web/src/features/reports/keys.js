@@ -1,4 +1,4 @@
 export const reportKeys = {
-  all: ["reports"],
-  list: (params) => ["reports", "list", params],
+  all: ['reports'],
+  list: (params) => ['reports', 'list', params],
 };

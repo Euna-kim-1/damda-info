@@ -137,7 +137,8 @@ export function useUploadReport() {
         const first = receipt[0];
         if (first?.price_display) setPrice(first.price_display);
         else if (first?.price != null) setPrice(`$${first.price}`);
-        if (first?.name) setValue('productName', first.name, { shouldValidate: true });
+        if (first?.name)
+          setValue('productName', first.name, { shouldValidate: true });
       }
     },
     onError: (e) => {
@@ -264,11 +265,11 @@ export function useUploadReport() {
     !!storeName?.trim() &&
     !uploadMutation.isPending &&
     !isSubmitting &&
-    (
-      (mode === 'single' && !!price && !!finalName) ||
+    ((mode === 'single' && !!price && !!finalName) ||
       (mode === 'receipt' &&
-        receiptItems.filter((it) => !!it?.name && (it?.price_display || it?.price != null)).length >= 2)
-    );
+        receiptItems.filter(
+          (it) => !!it?.name && (it?.price_display || it?.price != null),
+        ).length >= 2));
 
   const uploadReport = handleSubmit(
     async (values) => {
@@ -290,7 +291,8 @@ export function useUploadReport() {
         try {
           for (let i = 0; i < itemsToSave.length; i++) {
             const it = itemsToSave[i];
-            const itemPrice = it.price_display || (it.price != null ? `$${it.price}` : '');
+            const itemPrice =
+              it.price_display || (it.price != null ? `$${it.price}` : '');
 
             await uploadMutation.mutateAsync({
               file: pickedFile,

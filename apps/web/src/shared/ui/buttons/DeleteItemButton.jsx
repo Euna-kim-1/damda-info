@@ -1,14 +1,11 @@
-import { Box, IconButton, useMediaQuery } from '@mui/material';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import { Box, IconButton } from '@mui/material';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 
-export default function DeleteItemButton({
+const DeleteItemButton = ({
   onDelete,
   disabled = false,
   iconColor = 'text.secondary',
-}) {
-  const isDesktop = useMediaQuery('(hover: hover) and (pointer: fine)');
-
+}) => {
   return (
     <Box
       sx={{
@@ -22,25 +19,16 @@ export default function DeleteItemButton({
       <IconButton
         size="small"
         onClick={(e) => {
-          if (!isDesktop) return;
           e.preventDefault();
           e.stopPropagation();
           onDelete?.();
         }}
-        disabled={!isDesktop || disabled}
+        disabled={disabled}
       >
-        {isDesktop ? (
-          <DeleteOutlineRoundedIcon
-            fontSize="small"
-            sx={{ color: iconColor }}
-          />
-        ) : (
-          <DeleteSweepIcon
-            fontSize="small"
-            sx={{ color: iconColor }}
-          />
-        )}
+        <DeleteOutlineRoundedIcon fontSize="small" sx={{ color: iconColor }} />
       </IconButton>
     </Box>
   );
-}
+};
+
+export default DeleteItemButton;

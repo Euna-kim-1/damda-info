@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@mui/material';
 
-export default function ListConfirmDialog({
+const ListConfirmDialog = ({
   open,
   title,
   message,
@@ -15,19 +15,19 @@ export default function ListConfirmDialog({
   cancelLabel = 'Cancel',
   onClose,
   onConfirm,
-}) {
-  return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
-        <DialogContentText>{message}</DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>{cancelLabel}</Button>
-        <Button color="error" onClick={onConfirm}>
-          {confirmLabel}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
+}) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle>{title}</DialogTitle>
+    <DialogContent>
+      <DialogContentText>{message}</DialogContentText>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose}>{cancelLabel}</Button>
+      <Button color="error" onClick={onConfirm}>
+        {confirmLabel}
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
+export default ListConfirmDialog;

@@ -6,7 +6,7 @@ const OPS = new Set(['+', '-', '×', '÷']);
 const isOp = (v) => OPS.has(v);
 const STORAGE_KEY = 'damda_calc_state_v1';
 
-export default function CalculatorPage() {
+const CalculatorPage = () => {
   const [display, setDisplay] = useState('');
   const [history, setHistory] = useState([]);
   const [hydrated, setHydrated] = useState(false);
@@ -326,4 +326,6 @@ export default function CalculatorPage() {
       </Box>
     </ContainerSection>
   );
-}
+};
+
+export default CalculatorPage;

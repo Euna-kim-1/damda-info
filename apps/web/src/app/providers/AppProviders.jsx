@@ -5,13 +5,13 @@ import { BrowserRouter } from 'react-router-dom';
 import theme from './theme';
 import queryClient from './queryClient';
 
-export default function AppProviders({ children }) {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>{children}</BrowserRouter>
-      </ThemeProvider>
-    </QueryClientProvider>
-  );
-}
+const AppProviders = ({ children }) => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter>{children}</BrowserRouter>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
+
+export default AppProviders;

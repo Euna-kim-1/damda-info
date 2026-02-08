@@ -1,10 +1,19 @@
 import { TextField, InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
-export default function SearchInput({ value, onChange, onSubmit, placeholder }) {
+const SearchInput = ({
+  value,
+  defaultValue,
+  onChange,
+  onSubmit,
+  placeholder,
+}) => {
+  const valueProps =
+    value !== undefined ? { value } : { defaultValue: defaultValue ?? '' };
+
   return (
     <TextField
-      value={value || ''}
+      {...valueProps}
       onChange={onChange}
       placeholder={placeholder}
       size="small"
@@ -27,4 +36,6 @@ export default function SearchInput({ value, onChange, onSubmit, placeholder }) 
       }}
     />
   );
-}
+};
+
+export default SearchInput;

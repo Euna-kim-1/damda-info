@@ -11,7 +11,6 @@ import { useEffect, useMemo, useState } from 'react';
 import L from 'leaflet';
 import {
   Box,
-  Button,
   Card,
   CardContent,
   Divider,
@@ -25,7 +24,8 @@ import {
 } from '../../../shared/ui/store/StoreMapIcons';
 import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
 import NearMeIcon from '@mui/icons-material/NearMe';
-function FitToStores({ stores, padding }) {
+
+const FitToStores = ({ stores, padding }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -38,9 +38,9 @@ function FitToStores({ stores, padding }) {
   }, [map, stores, padding]);
 
   return null;
-}
+};
 
-function haversineKm(a, b) {
+const haversineKm = (a, b) => {
   const R = 6371; // km
   const toRad = (d) => (d * Math.PI) / 180;
 
@@ -54,16 +54,16 @@ function haversineKm(a, b) {
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
 
   return 2 * R * Math.asin(Math.sqrt(h));
-}
+};
 
-export default function StoresMapView({
+const StoresMapView = ({
   height = 220,
   scrollWheelZoom = false,
   fitPadding = [20, 20],
   showPopups = false,
   showLoading = true,
   enableMyLocationFeatures = false,
-}) {
+}) => {
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -375,4 +375,6 @@ export default function StoresMapView({
       )}
     </Box>
   );
-}
+};
+
+export default StoresMapView;

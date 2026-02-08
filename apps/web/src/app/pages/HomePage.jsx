@@ -1,4 +1,4 @@
-import { Box, Typography, Stack, Button } from '@mui/material';
+import { Box, Typography, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../shared/layout/ContainerSection';
 import PrimaryButton from '../../shared/ui/buttons/PrimaryButton';
@@ -7,13 +7,9 @@ import { ReportCard } from '../../shared/ui/reports';
 import StoresMapView from './store/StoresMapView';
 import AddIcon from '@mui/icons-material/Add';
 import AddHomeWorkOutlinedIcon from '@mui/icons-material/AddHomeWorkOutlined';
-function money(n) {
-  const num = Number(n);
-  if (Number.isNaN(num)) return '';
-  return `$${num.toFixed(2)}`;
-}
+import { formatPrice } from '../../shared/utils/formatters';
 
-export default function HomePage() {
+const HomePage = () => {
   const navigate = useNavigate();
   const { data, isLoading, isError } = useRecentReports({
     page: 1,
@@ -112,7 +108,7 @@ export default function HomePage() {
                 key={r.id}
                 title={r.product_name}
                 storeName={r.store_name}
-                price={money(r.price)}
+                price={formatPrice(r.price)}
                 imageUrl={r.image_url}
                 reportedAt={r.reported_at}
               />
@@ -144,4 +140,6 @@ export default function HomePage() {
       </Box>
     </ContainerSection>
   );
-}
+};
+
+export default HomePage;
