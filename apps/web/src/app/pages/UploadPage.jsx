@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -29,6 +29,7 @@ import BackButton from '../../shared/ui/buttons/BackButton';
 export default function UploadPage() {
   const navigate = useNavigate();
   const [successOpen, setSuccessOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState(''); // hmart, emart, amart
 
   const {
     previewUrl,
@@ -49,6 +50,7 @@ export default function UploadPage() {
 
     mode,
     setMode,
+    setSelectedStoreType,
 
     saveMsg,
     submitted,
@@ -66,6 +68,29 @@ export default function UploadPage() {
     hasFile,
     canUpload,
   } = useUploadReport();
+
+  useEffect(() => {
+    setSelectedStoreType(selectedStore);
+    console.log('🏪 UploadPage - selectedStore 변경:', selectedStore);
+  }, [selectedStore, setSelectedStoreType]);
+
+  const filteredStores = useMemo(() => {
+    if (mode === 'single') return stores;
+    if (!selectedStore) return stores;
+    return stores.filter((s) => {
+      const storeName = s.name.toLowerCase();
+
+      if (selectedStore === 'amart') {
+        return storeName.includes('a-mart');
+      } else if (selectedStore === 'emart') {
+        return storeName.includes('e-mart');
+      } else if (selectedStore === 'hmart') {
+        return storeName.includes('h-mart');
+      }
+
+      return false;
+    });
+  }, [mode, selectedStore, stores]);
 
   useEffect(() => {
     if (!saveMsg) return;
@@ -104,7 +129,9 @@ export default function UploadPage() {
                   Upload
                 </Typography>
                 <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
-                  Select mode first, then choose a photo.
+                  {mode === 'receipt'
+                    ? 'Select mode and store first, then choose a photo.'
+                    : 'Select mode first, then choose a photo.'}
                 </Typography>
               </Box>
 
@@ -113,7 +140,7 @@ export default function UploadPage() {
 
             {/* ✅ Centered controls */}
             <Stack spacing={1.25} alignItems="center">
-              {/* Toggle */}
+              {/* Toggle - Single/Receipt */}
               <ToggleButtonGroup
                 value={mode}
                 exclusive
@@ -144,12 +171,52 @@ export default function UploadPage() {
                   : 'Single mode: extract one product'}
               </Typography>
 
+              {mode === 'receipt' && (
+                <>
+                  <ToggleButtonGroup
+                    value={selectedStore}
+                    exclusive
+                    onChange={(_, v) => v && setSelectedStore(v)}
+                    size="small"
+                    sx={{
+                      borderRadius: 999,
+                      overflow: 'hidden',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '& .MuiToggleButton-root': {
+                        px: 2.5,
+                        py: 0.8,
+                        fontWeight: 900,
+                        textTransform: 'none',
+                        borderRadius: 0,
+                        minWidth: 100,
+                        fontSize: 14,
+                      },
+                    }}
+                  >
+                    <ToggleButton value="hmart">H-mart</ToggleButton>
+                    <ToggleButton value="emart">E-mart</ToggleButton>
+                    <ToggleButton value="amart">A-mart</ToggleButton>
+                  </ToggleButtonGroup>
+
+                  <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
+                    {selectedStore
+                      ? `Selected: ${selectedStore.toUpperCase()}`
+                      : 'Select a store for accurate OCR parsing'}
+                  </Typography>
+                </>
+              )}
+
               {/* Choose + Cancel */}
               <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
                 <Button
                   variant="contained"
                   component="label"
-                  disabled={loading || uploadLoading}
+                  disabled={
+                    loading ||
+                    uploadLoading ||
+                    (mode === 'receipt' && !selectedStore)
+                  }
                   sx={{
                     fontWeight: 900,
                     px: 3.5,
@@ -349,7 +416,7 @@ export default function UploadPage() {
 
             <Divider />
 
-            {/* Store + Upload: 기존 유지 */}
+            {/* Store + Upload */}
             <Stack spacing={2}>
               <Controller
                 name="storeName"
@@ -360,9 +427,13 @@ export default function UploadPage() {
                     <Select
                       {...field}
                       label="Store"
-                      disabled={storesLoading || stores.length === 0}
+                      disabled={
+                        storesLoading ||
+                        filteredStores.length === 0 ||
+                        (mode === 'receipt' && !selectedStore)
+                      }
                     >
-                      {stores.map((s) => (
+                      {filteredStores.map((s) => (
                         <MenuItem key={s.id} value={s.name}>
                           {s.name}
                         </MenuItem>

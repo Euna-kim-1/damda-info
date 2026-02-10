@@ -7,7 +7,7 @@ import {
   extractBestPrice,
   extractNameCandidates,
   extractPriceCandidates,
-  parseReceiptItems,
+  parseReceiptByStoreType,
 } from './uploadUtils';
 import { apiGet, apiPostForm } from '../../shared/api/client';
 
@@ -30,8 +30,8 @@ const formSchema = z
   });
 
 export function useUploadReport() {
-  // ✅ NEW: mode
   const [mode, setMode] = useState('single'); // 'single' | 'receipt'
+  const [selectedStoreType, setSelectedStoreType] = useState('');
 
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -74,7 +74,6 @@ export function useUploadReport() {
     [manualName, productName],
   );
 
-  // ✅ IMPORTANT: isReceipt는 "receiptItems로 추측"이 아니라 mode가 기준이어야 함
   const isReceipt = mode === 'receipt';
 
   const storesQuery = useQuery({
@@ -104,15 +103,16 @@ export function useUploadReport() {
   }, [setValue, storeName, storesQuery.data]);
 
   const ocrMutation = useMutation({
-    mutationFn: async ({ file, mode }) => {
+    mutationFn: async ({ file, mode, storeType }) => {
       const form = new FormData();
       form.append('image', file);
 
       const data = await apiPostForm('/ocr', form);
       const raw = data?.text || '';
 
-      // ✅ mode에 따라 receipt 파싱을 "켜거나 끄기"
-      const receipt = mode === 'receipt' ? parseReceiptItems(raw) || [] : [];
+      const receipt = mode === 'receipt'
+        ? parseReceiptByStoreType(raw, storeType)
+        : [];
 
       const prices = extractPriceCandidates(raw, 6);
       const nextPrice = prices[0] || extractBestPrice(raw);
@@ -132,7 +132,6 @@ export function useUploadReport() {
       setNameCandidates(candidates);
       setValue('productName', candidates[0] || '', { shouldValidate: true });
 
-      // ✅ receipt mode일 때만 첫번째 아이템으로 세팅
       if (mode === 'receipt' && receipt && receipt.length > 0) {
         const first = receipt[0];
         if (first?.price_display) setPrice(first.price_display);
@@ -194,16 +193,13 @@ export function useUploadReport() {
     setSaveMsg('');
     setSubmitted(false);
 
-    // ✅ mode 포함해서 OCR
-    ocrMutation.mutate({ file, mode });
+    console.log('📸 OCR 실행 - mode:', mode, 'storeType:', selectedStoreType);
+    ocrMutation.mutate({ file, mode, storeType: selectedStoreType });
 
     e.target.value = '';
   };
 
-  // ✅ mode 바꾸면 (사진 선택 전) 상태를 한번 정리해주는게 UX 좋음
   useEffect(() => {
-    // 이미 파일이 선택된 상태에서 mode 바꾸면 혼란 생김 → 초기화 추천
-    // (원치 않으면 이 블록 삭제해도 됨)
     if (!pickedFile) {
       setOcrText('');
       setPrice('');
@@ -256,8 +252,6 @@ export function useUploadReport() {
   };
 
   const missingFile = !pickedFile;
-
-  // ✅ mode 기준으로 missingPrice 결정
   const missingPrice = mode === 'single' ? !price : receiptItems.length === 0;
 
   const canUpload =
@@ -326,9 +320,11 @@ export function useUploadReport() {
   );
 
   return {
-    // ✅ expose mode
     mode,
     setMode,
+
+    selectedStoreType,
+    setSelectedStoreType,
 
     previewUrl,
     ocrText,
