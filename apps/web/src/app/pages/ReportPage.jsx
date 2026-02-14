@@ -1,19 +1,40 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Pagination, Stack, Typography } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { useRecentReports } from '../../features/reports/hooks';
 import ContainerSection from '../../shared/layout/ContainerSection';
 import { ReportCard } from '../../shared/ui/reports';
 
 const ReportPage = () => {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const q = (params.get('q') || '').trim();
+  const rawPage = Number(params.get('page') || 1);
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.trunc(rawPage) : 1;
+  const pageSize = 10;
 
   const { data, isLoading, isError, refetch } = useRecentReports({
-    limit: 10,
+    page,
+    pageSize,
     q: q || undefined,
   });
 
   const reports = data?.reports ?? [];
+  const hasNext = Boolean(data?.has_next);
+  const hasPrev = page > 1;
+  const totalPages =
+    Number.isFinite(data?.total_pages) && data.total_pages > 0
+      ? data.total_pages
+      : hasNext
+        ? page + 1
+        : page;
+  const pageCount = Math.max(1, totalPages);
+
+  const movePage = (nextPage) => {
+    const safePage = Math.max(1, Math.trunc(nextPage));
+    const nextParams = new URLSearchParams(params);
+    if (safePage === 1) nextParams.delete('page');
+    else nextParams.set('page', String(safePage));
+    setParams(nextParams);
+  };
 
   return (
     <ContainerSection sx={{ py: 2 }}>
@@ -72,6 +93,22 @@ const ReportPage = () => {
           {reports.map((r) => (
             <ReportCard key={r.id} variant="recent" report={r} />
           ))}
+
+          {reports.length > 0 && (
+            <Stack alignItems="center" sx={{ pt: 0.5 }}>
+              <Pagination
+                page={page}
+                count={pageCount}
+                onChange={(_, value) => movePage(value)}
+                shape="rounded"
+                color="primary"
+                siblingCount={0}
+                boundaryCount={1}
+                showFirstButton={hasPrev}
+                showLastButton={hasNext}
+              />
+            </Stack>
+          )}
         </Stack>
       )}
     </ContainerSection>

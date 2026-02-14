@@ -9,7 +9,13 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get("/", async (req, res) => {
     try {
         const bucket = process.env.SUPABASE_BUCKET || "damda-images";
-        const limit = Math.min(Number(req.query.limit || 10), 50);
+        const parsedLimit = Number(req.query.limit || 10);
+        const limit = Math.min(Math.max(Number.isFinite(parsedLimit) ? Math.trunc(parsedLimit) : 10, 1), 50);
+        const parsedPage = Number(req.query.page || 1);
+        const page = Math.max(Number.isFinite(parsedPage) ? Math.trunc(parsedPage) : 1, 1);
+        const from = (page - 1) * limit;
+        const fetchSize = limit + 1; // fetch one extra row to know whether next page exists
+        const to = from + fetchSize - 1;
         const rawQ = String(req.query.q || "").trim();
 
         // if q is provided, find product_id in products
@@ -17,7 +23,17 @@ router.get("/", async (req, res) => {
 
         if (rawQ) {
             const nq = normalizeName(rawQ); // "wheat noodle" -> "wheat noodle"
-            if (!nq) return res.json({ ok: true, reports: [] });
+            if (!nq) {
+                return res.json({
+                    ok: true,
+                    reports: [],
+                    page,
+                    limit,
+                    total_count: 0,
+                    total_pages: 0,
+                    has_next: false,
+                });
+            }
 
             const { data: prod, error: prodErr } = await supabase
                 .from("products")
@@ -31,7 +47,15 @@ router.get("/", async (req, res) => {
 
             // if no search results, return empty results
             if (productIds.length === 0) {
-                return res.json({ ok: true, reports: [] });
+                return res.json({
+                    ok: true,
+                    reports: [],
+                    page,
+                    limit,
+                    total_count: 0,
+                    total_pages: 0,
+                    has_next: false,
+                });
             }
         }
 
@@ -47,19 +71,25 @@ router.get("/", async (req, res) => {
           reported_at,
           products:product_id ( id, name ),
           stores:store_id ( id, name )
-        `)
+        `, { count: "exact" })
             .order("reported_at", { ascending: false })
-            .limit(limit);
+            .range(from, to);
 
         // filter by product_id
         if (productIds) {
             query = query.in("product_id", productIds);
         }
 
-        const { data, error } = await query;
+        const { data, count, error } = await query;
         if (error) throw error;
 
-        const reports = (data || []).map((r) => {
+        const totalCount = Number.isFinite(count) ? count : 0;
+        const totalPages = totalCount > 0 ? Math.ceil(totalCount / limit) : 0;
+        const rows = data || [];
+        const hasNext = page < totalPages;
+        const visibleRows = hasNext ? rows.slice(0, limit) : rows;
+
+        const reports = visibleRows.map((r) => {
             const { data: pub } = supabase.storage
                 .from(bucket)
                 .getPublicUrl(r.photo_path);
@@ -76,7 +106,15 @@ router.get("/", async (req, res) => {
             };
         });
 
-        return res.json({ ok: true, reports });
+        return res.json({
+            ok: true,
+            reports,
+            page,
+            limit,
+            total_count: totalCount,
+            total_pages: totalPages,
+            has_next: hasNext,
+        });
     } catch (err) {
         console.error("REPORT GET error:", err);
         return res.status(500).json({ ok: false, error: String(err?.message || err) });
