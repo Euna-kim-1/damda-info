@@ -1,8 +1,8 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { useRecentReports } from '../../features/reports/hooks';
 import ContainerSection from '../../shared/layout/ContainerSection';
-import { formatPrice, formatShortDate } from '../../shared/utils/formatters';
+import { ReportCard } from '../../shared/ui/reports';
 
 const ReportPage = () => {
   const [params] = useSearchParams();
@@ -67,100 +67,13 @@ const ReportPage = () => {
         </Box>
       )}
 
-      {!isLoading &&
-        !isError &&
-        reports.map((r) => {
-          const hasImage = !!r.image_url;
-          return (
-            <Box
-              key={r.id}
-              sx={{
-                position: 'relative',
-                display: 'flex',
-                gap: 2,
-                mb: 2,
-                p: 1.5,
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-              }}
-            >
-              {r.reported_at && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ position: 'absolute', top: 8, right: 12 }}
-                >
-                  Updated: {formatShortDate(r.reported_at)}
-                </Typography>
-              )}
-
-              {/* ✅ 기존: image_url 있을 때는 그대로 이미지 렌더링 */}
-              {hasImage ? (
-                <Box
-                  component="img"
-                  src={r.image_url}
-                  alt={r.product_name ?? 'report image'}
-                  sx={{
-                    width: 90,
-                    height: 90,
-                    objectFit: 'cover',
-                    borderRadius: 1,
-                    bgcolor: 'grey.100',
-                    flexShrink: 0,
-                  }}
-                />
-              ) : (
-                /* ✅ 새로 추가: image_url이 null이면 placeholder (깨짐 방지) */
-                <Box
-                  sx={{
-                    width: 90,
-                    height: 90,
-                    borderRadius: 1,
-                    bgcolor: 'grey.100',
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    px: 1,
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    No image
-                  </Typography>
-                </Box>
-              )}
-
-              <Box sx={{ flex: 1, pr: 6, pt: { xs: 1.3 } }}>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight={600}
-                  color="text.primary"
-                >
-                  {r.product_name ?? '(No name)'}
-                </Typography>
-
-                <Typography
-                  variant="subtitle2"
-                  color="secondary.dark"
-                  display="block"
-                >
-                  {formatPrice(r.price, '—')}
-                </Typography>
-
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  sx={{ mt: 1 }}
-                >
-                  Store: {r.store_name ?? '—'}
-                </Typography>
-              </Box>
-            </Box>
-          );
-        })}
+      {!isLoading && !isError && (
+        <Stack spacing={1.2}>
+          {reports.map((r) => (
+            <ReportCard key={r.id} variant="recent" report={r} />
+          ))}
+        </Stack>
+      )}
     </ContainerSection>
   );
 };
