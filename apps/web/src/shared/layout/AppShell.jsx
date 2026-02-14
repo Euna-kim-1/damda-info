@@ -99,12 +99,11 @@ const AppShell = ({ children }) => {
         elevation={12}
         sx={{
           position: 'fixed',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 0,
+          left: { xs: 12, sm: 24 },
+          right: { xs: 12, sm: 24 },
+          bottom: { xs: 10, sm: 16 },
+          bgcolor: 'transparent',
+          boxShadow: 'none',
           pb: 'env(safe-area-inset-bottom)',
           overflow: 'visible',
           zIndex: (theme) => theme.zIndex.appBar + 10,
@@ -118,25 +117,37 @@ const AppShell = ({ children }) => {
                 if (next === '__fab__') return;
                 navigate(next);
               }}
-              showLabels
+              showLabels={false}
               sx={{
                 height: NAV_HEIGHT,
+                borderRadius: 999,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+                boxShadow: 8,
+                px: { xs: 0.5, sm: 1.5 },
+                '& .MuiBottomNavigationAction-root': {
+                  minWidth: 52,
+                  color: 'text.secondary',
+                  borderRadius: 999,
+                },
                 '& .MuiBottomNavigationAction-root.Mui-selected': {
-                  color: 'secondary.main',
+                  color: 'primary.dark',
+                  bgcolor: 'transparent',
                 },
                 '& .MuiBottomNavigationAction-root.Mui-selected svg': {
-                  color: 'secondary.main',
+                  color: 'primary.dark',
                 },
               }}
             >
               {navItems.map((item) => (
                 <BottomNavigationAction
                   key={item.value}
-                  label={item.label}
+                  label=""
                   value={item.value}
                   icon={item.icon}
-                  showLabel={item.showLabel}
-                  aria-label={item.ariaLabel}
+                  showLabel={false}
+                  aria-label={item.label || 'Action'}
                 />
               ))}
             </BottomNavigation>
