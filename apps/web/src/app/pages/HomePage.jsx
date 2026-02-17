@@ -8,6 +8,7 @@ import { useRecentReports } from '../../features/reports/hooks';
 import StoresMapView from './store/StoresMapView';
 import AddHomeWorkOutlinedIcon from '@mui/icons-material/AddHomeWorkOutlined';
 import SearchIcon from '@mui/icons-material/Search';
+import HomeLaunchBanners from './home/HomeLaunchBanners';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -79,113 +80,7 @@ const HomePage = () => {
             }}
           />
 
-          <Stack
-            direction="row"
-            spacing={1.25}
-            sx={{
-              overflowX: 'auto',
-              pb: 0.5,
-              WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-x',
-              scrollbarWidth: 'none',
-              '&::-webkit-scrollbar': {
-                display: 'none',
-              },
-            }}
-          >
-            <Box
-              sx={{
-                width: {
-                  xs: '88%',
-                  sm: 'calc((100% - 10px) / 2)',
-                  md: 'calc((100% - 20px) / 3)',
-                },
-                flex: '0 0 auto',
-                borderRadius: 2.5,
-                p: 2,
-                color: '#fff',
-                background:
-                  'linear-gradient(135deg, #0f7a86 0%, #15537f 55%, #123d69 100%)',
-                boxShadow: '0 6px 14px rgba(22, 74, 104, 0.2)',
-              }}
-            >
-              <Typography sx={{ fontSize: 12, opacity: 0.9, mb: 0.5 }}>
-                Sponsored
-              </Typography>
-              <Typography sx={{ fontSize: { xs: 22, md: 26 }, fontWeight: 800, lineHeight: 1.1 }}>
-                Fresh deals
-                <br />
-                this week
-              </Typography>
-              <PrimaryButton variantStyle="primary1" sx={{ mt: 1.3 }}>
-                Learn more
-              </PrimaryButton>
-            </Box>
-
-            <Box
-              sx={{
-                width: {
-                  xs: '88%',
-                  sm: 'calc((100% - 10px) / 2)',
-                  md: 'calc((100% - 20px) / 3)',
-                },
-                flex: '0 0 auto',
-                borderRadius: 2.5,
-                p: 2,
-                bgcolor: '#F2EEE8',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 6px 14px rgba(0,0,0,0.08)',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <Typography
-                sx={{
-                  color: '#4A1F14',
-                  fontSize: { xs: 23, md: 28 },
-                  fontWeight: 800,
-                  lineHeight: 1.1,
-                }}
-              >
-                Start the day
-                <br />
-                with great taste
-              </Typography>
-              <PrimaryButton variantStyle="primary4" sx={{ mt: 1.3 }}>
-                Order now
-              </PrimaryButton>
-            </Box>
-
-            <Box
-              sx={{
-                width: {
-                  xs: '88%',
-                  sm: 'calc((100% - 10px) / 2)',
-                  md: 'calc((100% - 20px) / 3)',
-                },
-                flex: '0 0 auto',
-                borderRadius: 2.5,
-                p: 2,
-                color: '#fff',
-                background:
-                  'linear-gradient(135deg, #58723c 0%, #6e7b4f 55%, #85915f 100%)',
-                boxShadow: '0 6px 14px rgba(72, 87, 46, 0.2)',
-              }}
-            >
-              <Typography sx={{ fontSize: 12, opacity: 0.9, mb: 0.5 }}>
-                Sponsored
-              </Typography>
-              <Typography sx={{ fontSize: { xs: 22, md: 26 }, fontWeight: 800, lineHeight: 1.1 }}>
-                Save more
-                <br />
-                every weekend
-              </Typography>
-              <PrimaryButton variantStyle="primary1" sx={{ mt: 1.3 }}>
-                Check deals
-              </PrimaryButton>
-            </Box>
-          </Stack>
+          <HomeLaunchBanners />
 
         </Stack>
       </Box>
