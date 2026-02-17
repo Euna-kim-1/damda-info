@@ -12,6 +12,7 @@ import {
 import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined';
 import DeleteItemButton from '../../../shared/ui/buttons/DeleteItemButton';
 import ListConfirmDialog from './ListConfirmDialog';
+import LoadingState from '../../../shared/ui/LoadingState';
 import {
   useCreateList,
   useDeleteList,
@@ -271,7 +272,7 @@ const ListsPage = () => {
         )}
       </Box>
 
-      {isLoading && <Typography>Loading...</Typography>}
+      {isLoading && <LoadingState />}
       {isError && (
         <Typography color="error">
           Failed to load lists: {String(error?.message || error)}

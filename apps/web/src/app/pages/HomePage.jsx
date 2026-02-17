@@ -9,6 +9,7 @@ import StoresMapView from './store/StoresMapView';
 import AddHomeWorkOutlinedIcon from '@mui/icons-material/AddHomeWorkOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import HomeLaunchBanners from './home/HomeLaunchBanners';
+import LoadingState from '../../shared/ui/LoadingState';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -174,9 +175,7 @@ const HomePage = () => {
           </PrimaryButton>
         </Stack>
 
-        {isLoading && (
-          <Typography sx={{ color: 'text.secondary' }}>Loading...</Typography>
-        )}
+        {isLoading && <LoadingState />}
 
         {isError && (
           <Typography sx={{ color: 'error.main' }}>

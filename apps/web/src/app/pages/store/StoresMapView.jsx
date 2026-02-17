@@ -23,6 +23,7 @@ import {
   getStoreMarkerIcon,
 } from '../../../shared/ui/store/StoreMapIcons';
 import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
+import LoadingState from '../../../shared/ui/LoadingState';
 import NearMeIcon from '@mui/icons-material/NearMe';
 
 const FitToStores = ({ stores, padding }) => {
@@ -173,7 +174,7 @@ const StoresMapView = ({
         }}
       >
         {showLoading && loading && (
-          <div style={{ padding: 12 }}>Loading stores…</div>
+          <LoadingState text="Loading stores..." sx={{ px: 1.5 }} />
         )}
 
         {enableMyLocationFeatures && (
