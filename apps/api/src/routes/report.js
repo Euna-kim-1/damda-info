@@ -5,6 +5,26 @@ import { normalizeName } from "../../../web/src/shared/utils/normalizeText.js";
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
+const BASKET_IMAGE_COUNT = 7;
+
+function stringHash(value = "") {
+    let hash = 0;
+    for (let i = 0; i < value.length; i++) {
+        hash = (hash << 5) - hash + value.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+}
+
+function getBasketImagePath(seedValue = "") {
+    const idx = (stringHash(String(seedValue)) % BASKET_IMAGE_COUNT) + 1;
+    return `/basket/${idx}.png`;
+}
+
+function isReceiptPhotoPath(photoPath = "") {
+    return String(photoPath).startsWith("receipt/");
+}
+
 
 router.get("/", async (req, res) => {
     try {
@@ -90,9 +110,9 @@ router.get("/", async (req, res) => {
         const visibleRows = hasNext ? rows.slice(0, limit) : rows;
 
         const reports = visibleRows.map((r) => {
-            const { data: pub } = supabase.storage
-                .from(bucket)
-                .getPublicUrl(r.photo_path);
+            const imageUrl = isReceiptPhotoPath(r.photo_path)
+                ? getBasketImagePath(r.id || r.photo_path)
+                : supabase.storage.from(bucket).getPublicUrl(r.photo_path)?.data?.publicUrl ?? null;
 
             return {
                 id: r.id,
@@ -102,7 +122,7 @@ router.get("/", async (req, res) => {
                 reported_at: r.reported_at,
                 product_name: r.products?.name ?? null,
                 store_name: r.stores?.name ?? null,
-                image_url: pub?.publicUrl ?? null,
+                image_url: imageUrl,
             };
         });
 
@@ -126,7 +146,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     try {
         const bucket = process.env.SUPABASE_BUCKET || "damda-images";
 
-        const { storeName, city, address, productName, price, unit, notes, reportedAt } = req.body;
+        const { storeName, city, address, productName, price, unit, notes, reportedAt, mode } = req.body;
 
         if (!req.file) return res.status(400).json({ error: "No image file uploaded (field name: image)" });
         if (!storeName?.trim()) return res.status(400).json({ error: "storeName is required" });
@@ -188,7 +208,9 @@ router.post("/", upload.single("image"), async (req, res) => {
 
         // 3) storage upload
         const ext = (req.file.originalname.split(".").pop() || "jpg").toLowerCase();
-        const filePath = `${storeId}/${productId}/${Date.now()}.${ext}`;
+        const isReceiptMode = String(mode || "").toLowerCase() === "receipt";
+        const modeFolder = isReceiptMode ? "receipt" : "single";
+        const filePath = `${modeFolder}/${storeId}/${productId}/${Date.now()}.${ext}`;
 
         const { error: upFileErr } = await supabase.storage
             .from(bucket)

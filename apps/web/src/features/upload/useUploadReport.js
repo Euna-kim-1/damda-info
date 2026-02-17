@@ -74,8 +74,6 @@ export function useUploadReport() {
     [manualName, productName],
   );
 
-  const isReceipt = mode === 'receipt';
-
   const storesQuery = useQuery({
     queryKey: ['stores'],
     queryFn: async () => {
@@ -153,9 +151,10 @@ export function useUploadReport() {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: async ({ file, values }) => {
+    mutationFn: async ({ file, values, mode }) => {
       const form = new FormData();
       form.append('image', file);
+      form.append('mode', mode);
 
       form.append('storeName', values.storeName.trim());
       form.append('productName', (values.productName || '').trim());
@@ -290,6 +289,7 @@ export function useUploadReport() {
 
             await uploadMutation.mutateAsync({
               file: pickedFile,
+              mode,
               values: {
                 ...values,
                 productName: it.name,
@@ -309,6 +309,7 @@ export function useUploadReport() {
 
       await uploadMutation.mutateAsync({
         file: pickedFile,
+        mode,
         values: {
           ...values,
           productName: finalName,
