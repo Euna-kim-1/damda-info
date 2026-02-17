@@ -27,6 +27,7 @@ import {
 import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 import DeleteSweepOutlinedIcon from '@mui/icons-material/DeleteSweepOutlined';
 import RestartAltOutlinedIcon from '@mui/icons-material/RestartAltOutlined';
+import LoadingState from '../../../shared/ui/LoadingState';
 
 const NAV_HEIGHT = 64;
 
@@ -206,7 +207,7 @@ const ListDetailPage = () => {
           +
         </PrimaryButton>
       </Box>
-      {isLoading && <Typography>Loading...</Typography>}
+      {isLoading && <LoadingState />}
       {isError && (
         <Typography color="error">
           Failed to load items: {String(error?.message || error)}

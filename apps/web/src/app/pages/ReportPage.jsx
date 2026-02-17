@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useRecentReports } from '../../features/reports/hooks';
 import ContainerSection from '../../shared/layout/ContainerSection';
 import { ReportCard } from '../../shared/ui/reports';
+import LoadingState from '../../shared/ui/LoadingState';
 
 const ReportPage = () => {
   const [params, setParams] = useSearchParams();
@@ -42,7 +43,7 @@ const ReportPage = () => {
         {q ? `Results for "${q}"` : 'Recent reports'}
       </Typography>
 
-      {isLoading && <Typography>Loading...</Typography>}
+      {isLoading && <LoadingState />}
 
       {isError && (
         <Box sx={{ mt: 1 }}>
