@@ -49,7 +49,7 @@ const AppShell = ({ children }) => {
         icon: <ReceiptLongIcon />,
         color: 'secondary.light',
         onClick: () => {
-          navigate('/profile');
+          navigate('/upload?mode=receipt');
         },
       },
       {
@@ -58,7 +58,7 @@ const AppShell = ({ children }) => {
         icon: <PhotoCameraIcon />,
         color: 'secondary.main',
         onClick: () => {
-          navigate('/upload');
+          navigate('/upload?mode=single');
         },
       },
       {
