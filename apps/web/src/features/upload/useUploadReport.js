@@ -11,6 +11,14 @@ import {
 } from './uploadUtils';
 import { apiGet, apiPostForm } from '../../shared/api/client';
 
+const parsedOcrFreeLimit = Number(import.meta.env.VITE_OCR_FREE_LIMIT);
+const OCR_FREE_LIMIT =
+  Number.isFinite(parsedOcrFreeLimit) && parsedOcrFreeLimit > 0
+    ? Math.trunc(parsedOcrFreeLimit)
+    : Number.POSITIVE_INFINITY;
+const OCR_SCAN_COUNT_STORAGE_KEY =
+  import.meta.env.VITE_OCR_SCAN_COUNT_STORAGE_KEY;
+
 const formSchema = z
   .object({
     storeName: z.string().trim().min(1, 'Store is required.'),
@@ -42,6 +50,13 @@ export function useUploadReport() {
   const [nameCandidates, setNameCandidates] = useState([]);
   const [saveMsg, setSaveMsg] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [ocrScanCount, setOcrScanCount] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+
+    const raw = window.localStorage.getItem(OCR_SCAN_COUNT_STORAGE_KEY);
+    const count = Number(raw);
+    return Number.isFinite(count) && count >= 0 ? Math.trunc(count) : 0;
+  });
 
   const [receiptItems, setReceiptItems] = useState([]);
   const [selectedReceiptIndex, setSelectedReceiptIndex] = useState(0);
@@ -73,6 +88,7 @@ export function useUploadReport() {
     () => (manualName?.trim() ? manualName.trim() : productName?.trim() || ''),
     [manualName, productName],
   );
+  const ocrLimitReached = ocrScanCount >= OCR_FREE_LIMIT;
 
   const storesQuery = useQuery({
     queryKey: ['stores'],
@@ -176,6 +192,19 @@ export function useUploadReport() {
   const onPick = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (ocrLimitReached) {
+      setSaveMsg(`❌ OCR free limit reached (${OCR_FREE_LIMIT}/${OCR_FREE_LIMIT}).`);
+      e.target.value = '';
+      return;
+    }
+
+    setOcrScanCount((prev) => {
+      const next = Math.min(prev + 1, OCR_FREE_LIMIT);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(OCR_SCAN_COUNT_STORAGE_KEY, String(next));
+      }
+      return next;
+    });
 
     setPickedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
@@ -386,6 +415,9 @@ export function useUploadReport() {
     saveMsg,
     submitted,
     finalName,
+    ocrScanCount,
+    ocrFreeLimit: OCR_FREE_LIMIT,
+    ocrLimitReached,
 
     missingFile,
     missingPrice,

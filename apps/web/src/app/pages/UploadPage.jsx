@@ -56,6 +56,9 @@ export default function UploadPage() {
     saveMsg,
     submitted,
     finalName,
+    ocrScanCount,
+    ocrFreeLimit,
+    ocrLimitReached,
     register,
     control,
     errors,
@@ -131,6 +134,7 @@ export default function UploadPage() {
   const receiptStoreMissing = requiresManualLocation && !storeName?.trim();
   const receiptStoreUnavailable =
     mode === 'receipt' && !!selectedStore && filteredStores.length === 0;
+  const ocrLimitLabel = Number.isFinite(ocrFreeLimit) ? ocrFreeLimit : '∞';
 
   useEffect(() => {
     if (!saveMsg) return;
@@ -173,9 +177,16 @@ export default function UploadPage() {
               justifyContent="space-between"
             >
               <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ fontWeight: 900, fontSize: 20 }}>
-                  Upload
-                </Typography>
+                <Stack direction="row" spacing={1} alignItems="baseline">
+                  <Typography sx={{ fontWeight: 900, fontSize: 20 }}>
+                    Upload
+                  </Typography>
+                  <Typography
+                    sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 700 }}
+                  >
+                    ({ocrScanCount}/{ocrLimitLabel})
+                  </Typography>
+                </Stack>
                 <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
                   {mode === 'receipt'
                     ? 'Select mode and store first, then choose a photo.'
@@ -268,6 +279,7 @@ export default function UploadPage() {
                   disabled={
                     loading ||
                     uploadLoading ||
+                    ocrLimitReached ||
                     (mode === 'receipt' && !selectedStore)
                   }
                   sx={{
@@ -304,6 +316,11 @@ export default function UploadPage() {
                   </Button>
                 )}
               </Stack>
+              {ocrLimitReached && (
+                <Alert severity="warning" sx={{ width: '100%', maxWidth: 520 }}>
+                  OCR free limit reached ({ocrLimitLabel}/{ocrLimitLabel}).
+                </Alert>
+              )}
             </Stack>
 
             {/* Preview */}
