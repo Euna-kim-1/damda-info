@@ -407,12 +407,6 @@ export default function UploadPage() {
                                 {it.name}
                               </Typography>
 
-                              <Typography
-                                fontWeight={800}
-                                sx={{ flexShrink: 0 }}
-                              >
-                                {displayPrice}
-                              </Typography>
                               <Stack
                                 direction="row"
                                 spacing={0.5}

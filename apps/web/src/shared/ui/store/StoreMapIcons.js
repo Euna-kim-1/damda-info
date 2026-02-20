@@ -32,27 +32,28 @@ export const createStoreMarkerIcons = () => ({
 
 export const getStoreMarkerIcon = (storeName, icons) => {
   const normalized = normalizeName(storeName || '');
+  const compact = normalized.replace(/[\s-]/g, '');
 
   if (
     normalized.includes('이마트') ||
-    normalized.includes('emart') ||
-    normalized.includes('e마트')
+    normalized.includes('e마트') ||
+    compact.includes('emart')
   ) {
     return icons.emart;
   }
 
   if (
     normalized.includes('h마트') ||
-    normalized.includes('hmart') ||
-    normalized.includes('h마켓')
+    normalized.includes('h마켓') ||
+    compact.includes('hmart')
   ) {
     return icons.hmart;
   }
 
   if (
     normalized.includes('에이마트') ||
-    normalized.includes('amart') ||
-    normalized.includes('a마트')
+    normalized.includes('a마트') ||
+    compact.includes('amart')
   ) {
     return icons.amart;
   }
