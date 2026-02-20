@@ -13,7 +13,6 @@ import {
   FormHelperText,
   Select,
   MenuItem,
-  CircularProgress,
   Alert,
   Dialog,
   DialogTitle,
@@ -26,6 +25,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUploadReport } from '../../features/upload/useUploadReport';
 import { Controller } from 'react-hook-form';
 import BackButton from '../../shared/ui/buttons/BackButton';
+import LoadingState from '../../shared/ui/LoadingState';
+
+export default function UploadPage() {
+  const navigate = useNavigate();
 import DeleteItemButton from '../../shared/ui/buttons/DeleteItemButton';
 
 export default function UploadPage() {
@@ -40,23 +43,22 @@ export default function UploadPage() {
     loading,
     stores,
     storesLoading,
-
     price,
     setPrice,
     priceCandidates,
     nameCandidates,
     productName,
+    receiptItems,
+    selectedReceiptIndex,
+    selectReceiptItem,
     storeName,
-
     receiptItems,
     selectedReceiptIndex,
     selectReceiptItem,
     removeReceiptItem,
-
     mode,
     setMode,
     setSelectedStoreType,
-
     saveMsg,
     submitted,
     finalName,
@@ -102,6 +104,22 @@ export default function UploadPage() {
     });
   }, [mode, selectedStore, stores]);
 
+  const successOpen =
+    !!saveMsg &&
+    (saveMsg.toLowerCase().includes('complete') || saveMsg.startsWith('✅'));
+
+  useEffect(() => {
+    if (!successOpen) return;
+
+    const t = setTimeout(() => {
+      navigate('/report');
+    }, 1200);
+
+    return () => clearTimeout(t);
+  }, [successOpen, navigate]);
+
+  const isBusy = loading || uploadLoading;
+  const loadingText = loading ? 'Running OCR...' : 'Uploading report...';
   useEffect(() => {
     if (mode !== 'receipt') return;
 
@@ -168,7 +186,11 @@ export default function UploadPage() {
         >
           <Stack spacing={2}>
             {/* Header */}
-            <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
+            <Stack
+              direction="row"
+              alignItems="flex-start"
+              justifyContent="space-between"
+            >
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontWeight: 900, fontSize: 20 }}>
                   Upload
@@ -253,7 +275,12 @@ export default function UploadPage() {
               )}
 
               {/* Choose + Cancel */}
-              <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+              <Stack
+                direction="row"
+                spacing={1}
+                justifyContent="center"
+                flexWrap="wrap"
+              >
                 <Button
                   variant="contained"
                   component="label"
@@ -288,7 +315,6 @@ export default function UploadPage() {
                     variant="text"
                     onClick={() => {
                       resetUpload();
-                      setSuccessOpen(false);
                     }}
                     disabled={loading || uploadLoading}
                     sx={{ fontWeight: 800, whiteSpace: 'nowrap' }}
@@ -343,13 +369,16 @@ export default function UploadPage() {
 
                     <Stack direction="row" justifyContent="space-between">
                       <Typography color="text.secondary">Final name</Typography>
-                      <Typography fontWeight={700}>{finalName || '—'}</Typography>
+                      <Typography fontWeight={700}>
+                        {finalName || '—'}
+                      </Typography>
                     </Stack>
                   </Stack>
                 ) : (
                   // ✅ RECEIPT: 안내 문구만
                   <Typography sx={{ color: 'text.secondary', mt: 1 }}>
-                    Receipt mode is on. Select an item below to preview name/price.
+                    Receipt mode is on. Select an item below to preview
+                    name/price.
                   </Typography>
                 )}
 
@@ -364,7 +393,8 @@ export default function UploadPage() {
                       {receiptItems.map((it, idx) => {
                         const selected = idx === selectedReceiptIndex;
                         const displayPrice =
-                          it.price_display ?? (it.price != null ? `$${it.price}` : '—');
+                          it.price_display ??
+                          (it.price != null ? `$${it.price}` : '—');
 
                         return (
                           <Paper
@@ -377,11 +407,17 @@ export default function UploadPage() {
                               cursor: 'pointer',
                               borderRadius: 3,
                               border: '1px solid',
-                              borderColor: selected ? 'primary.main' : 'divider',
+                              borderColor: selected
+                                ? 'primary.main'
+                                : 'divider',
                               boxShadow: selected ? 3 : 1,
                             }}
                           >
-                            <Stack direction="row" justifyContent="space-between" spacing={2}>
+                            <Stack
+                              direction="row"
+                              justifyContent="space-between"
+                              spacing={2}
+                            >
                               <Typography
                                 fontWeight={800}
                                 noWrap
@@ -390,6 +426,12 @@ export default function UploadPage() {
                                 {it.name}
                               </Typography>
 
+                              <Typography
+                                fontWeight={800}
+                                sx={{ flexShrink: 0 }}
+                              >
+                                {displayPrice}
+                              </Typography>
                               <Stack
                                 direction="row"
                                 spacing={0.5}
@@ -419,7 +461,12 @@ export default function UploadPage() {
                           Price candidates
                         </Typography>
 
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
                           {priceCandidates.map((p) => (
                             <Chip
                               key={p}
@@ -436,7 +483,12 @@ export default function UploadPage() {
                       Name candidates
                     </Typography>
 
-                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                    >
                       {nameCandidates.map((c) => (
                         <Chip
                           key={c}
@@ -461,7 +513,9 @@ export default function UploadPage() {
                     fullWidth
                     error={submitted && !!errors.manualName}
                     helperText={
-                      submitted && errors.manualName ? errors.manualName.message : ' '
+                      submitted && errors.manualName
+                        ? errors.manualName.message
+                        : ' '
                     }
                   />
                 </Stack>
@@ -532,7 +586,6 @@ export default function UploadPage() {
           </Stack>
         </Paper>
 
-
         {/* ================= RAW OCR ================= */}
         <Paper
           sx={{
@@ -547,17 +600,10 @@ export default function UploadPage() {
         </Paper>
       </Stack>
 
-      {/* OCR MODAL */}
-      <Dialog open={loading} onClose={() => { }}>
-        <DialogTitle>Running OCR…</DialogTitle>
-        <DialogContent>
-          <CircularProgress />
-        </DialogContent>
-        <DialogActions />
-      </Dialog>
+      <LoadingState open={isBusy} text={loadingText} />
 
       {/* SUCCESS MODAL */}
-      <Dialog open={successOpen} onClose={() => { }}>
+      <Dialog open={successOpen} onClose={() => {}}>
         <DialogTitle>Upload complete</DialogTitle>
         <DialogContent>{saveMsg}</DialogContent>
         <DialogActions>
