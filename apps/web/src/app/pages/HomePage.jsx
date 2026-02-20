@@ -202,7 +202,7 @@ const HomePage = () => {
         <Typography sx={{ fontWeight: 800, mb: 1.5 }}>Stores</Typography>
 
         <Box sx={{ position: 'relative' }}>
-          <StoresMapView />
+          <StoresMapView showLoading={!isLoading} />
           <PrimaryButton
             startIcon={<AddHomeWorkOutlinedIcon fontSize="small" />}
             variantStyle="primary2"
