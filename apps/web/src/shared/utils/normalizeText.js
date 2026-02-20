@@ -1,9 +1,10 @@
 export const normalizeName = (name = '') =>
-  name
+  String(name)
     .toLowerCase()
     .trim()
-    .replace(/[\u0000-\u001f]/g, '')
-    .replace(/[^a-z0-9\s]/g, ' ')
+    .split('')
+    .filter((char) => char.charCodeAt(0) > 31)
+    .join('')
+    .replace(/[^a-z0-9가-힣\s-]/g, ' ')
     .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9가-힣-]/g, '')
     .trim();

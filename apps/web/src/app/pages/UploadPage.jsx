@@ -26,9 +26,6 @@ import { useUploadReport } from '../../features/upload/useUploadReport';
 import { Controller } from 'react-hook-form';
 import BackButton from '../../shared/ui/buttons/BackButton';
 import LoadingState from '../../shared/ui/LoadingState';
-
-export default function UploadPage() {
-  const navigate = useNavigate();
 import DeleteItemButton from '../../shared/ui/buttons/DeleteItemButton';
 
 export default function UploadPage() {
@@ -52,9 +49,6 @@ export default function UploadPage() {
     selectedReceiptIndex,
     selectReceiptItem,
     storeName,
-    receiptItems,
-    selectedReceiptIndex,
-    selectReceiptItem,
     removeReceiptItem,
     mode,
     setMode,
@@ -104,20 +98,6 @@ export default function UploadPage() {
     });
   }, [mode, selectedStore, stores]);
 
-  const successOpen =
-    !!saveMsg &&
-    (saveMsg.toLowerCase().includes('complete') || saveMsg.startsWith('✅'));
-
-  useEffect(() => {
-    if (!successOpen) return;
-
-    const t = setTimeout(() => {
-      navigate('/report');
-    }, 1200);
-
-    return () => clearTimeout(t);
-  }, [successOpen, navigate]);
-
   const isBusy = loading || uploadLoading;
   const loadingText = loading ? 'Running OCR...' : 'Uploading report...';
   useEffect(() => {
@@ -146,7 +126,8 @@ export default function UploadPage() {
   }, [filteredStores, mode, selectedStore, setValue, storeName]);
 
   const requiresManualLocation =
-    mode === 'receipt' && (selectedStore === 'hmart' || selectedStore === 'amart');
+    mode === 'receipt' &&
+    (selectedStore === 'hmart' || selectedStore === 'amart');
   const receiptStoreMissing = requiresManualLocation && !storeName?.trim();
   const receiptStoreUnavailable =
     mode === 'receipt' && !!selectedStore && filteredStores.length === 0;
@@ -438,7 +419,9 @@ export default function UploadPage() {
                                 alignItems="center"
                                 sx={{ flexShrink: 0 }}
                               >
-                                <Typography fontWeight={800}>{displayPrice}</Typography>
+                                <Typography fontWeight={800}>
+                                  {displayPrice}
+                                </Typography>
                                 <DeleteItemButton
                                   onDelete={() => removeReceiptItem(idx)}
                                   iconColor="error.main"
@@ -534,7 +517,9 @@ export default function UploadPage() {
                     fullWidth
                     error={
                       submitted &&
-                      (!!errors.storeName || receiptStoreMissing || receiptStoreUnavailable)
+                      (!!errors.storeName ||
+                        receiptStoreMissing ||
+                        receiptStoreUnavailable)
                     }
                   >
                     <InputLabel>Store</InputLabel>
@@ -554,18 +539,25 @@ export default function UploadPage() {
                       ))}
                     </Select>
                     {submitted && errors.storeName?.message && (
-                      <FormHelperText>{errors.storeName.message}</FormHelperText>
-                    )}
-                    {submitted && !errors.storeName?.message && receiptStoreMissing && (
                       <FormHelperText>
-                        Please select a store location before upload.
+                        {errors.storeName.message}
                       </FormHelperText>
                     )}
-                    {submitted && !errors.storeName?.message && !receiptStoreMissing && receiptStoreUnavailable && (
-                      <FormHelperText>
-                        No matching store location found for this mart.
-                      </FormHelperText>
-                    )}
+                    {submitted &&
+                      !errors.storeName?.message &&
+                      receiptStoreMissing && (
+                        <FormHelperText>
+                          Please select a store location before upload.
+                        </FormHelperText>
+                      )}
+                    {submitted &&
+                      !errors.storeName?.message &&
+                      !receiptStoreMissing &&
+                      receiptStoreUnavailable && (
+                        <FormHelperText>
+                          No matching store location found for this mart.
+                        </FormHelperText>
+                      )}
                   </FormControl>
                 )}
               />
