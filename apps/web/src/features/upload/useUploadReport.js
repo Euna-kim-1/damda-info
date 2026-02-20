@@ -94,11 +94,12 @@ export function useUploadReport() {
   useEffect(() => {
     const list = storesQuery.data || [];
     if (list.length === 0) return;
+    if (mode === 'receipt') return;
 
     if (!list.some((s) => s.name === storeName)) {
       setValue('storeName', list[0]?.name || '', { shouldValidate: true });
     }
-  }, [setValue, storeName, storesQuery.data]);
+  }, [mode, setValue, storeName, storesQuery.data]);
 
   const ocrMutation = useMutation({
     mutationFn: async ({ file, mode, storeType }) => {
@@ -224,6 +225,38 @@ export function useUploadReport() {
     if (it.name) setValue('productName', it.name, { shouldValidate: true });
   };
 
+  const removeReceiptItem = (idx) => {
+    if (idx < 0 || idx >= receiptItems.length) return;
+
+    const nextItems = receiptItems.filter((_, i) => i !== idx);
+    setReceiptItems(nextItems);
+
+    if (nextItems.length === 0) {
+      setSelectedReceiptIndex(0);
+      setPrice('');
+      setValue('productName', '', { shouldValidate: true });
+      return;
+    }
+
+    const nextIndex =
+      selectedReceiptIndex > idx
+        ? selectedReceiptIndex - 1
+        : Math.min(selectedReceiptIndex, nextItems.length - 1);
+
+    setSelectedReceiptIndex(nextIndex);
+
+    const nextItem = nextItems[nextIndex];
+    if (nextItem?.price_display) setPrice(nextItem.price_display);
+    else if (nextItem?.price != null) setPrice(`$${nextItem.price}`);
+    else setPrice('');
+
+    if (nextItem?.name) {
+      setValue('productName', nextItem.name, { shouldValidate: true });
+    } else {
+      setValue('productName', '', { shouldValidate: true });
+    }
+  };
+
   useEffect(() => {
     if (!previewUrl) return;
     return () => URL.revokeObjectURL(previewUrl);
@@ -255,14 +288,13 @@ export function useUploadReport() {
 
   const canUpload =
     !!pickedFile &&
-    !!storeName?.trim() &&
     !uploadMutation.isPending &&
     !isSubmitting &&
-    ((mode === 'single' && !!price && !!finalName) ||
+    ((mode === 'single' && !!storeName?.trim() && !!price && !!finalName) ||
       (mode === 'receipt' &&
         receiptItems.filter(
           (it) => !!it?.name && (it?.price_display || it?.price != null),
-        ).length >= 2));
+        ).length >= 1));
 
   const uploadReport = handleSubmit(
     async (values) => {
@@ -272,6 +304,11 @@ export function useUploadReport() {
       setSaveMsg('');
 
       if (mode === 'receipt') {
+        if (!values.storeName?.trim()) {
+          setSaveMsg('❌ Please select a store location before upload.');
+          return;
+        }
+
         const itemsToSave = receiptItems.filter(
           (it) => !!it?.name && (it?.price_display || it?.price != null),
         );
@@ -344,6 +381,7 @@ export function useUploadReport() {
     receiptItems,
     selectedReceiptIndex,
     selectReceiptItem,
+    removeReceiptItem,
 
     saveMsg,
     submitted,

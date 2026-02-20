@@ -10,6 +10,7 @@ import {
   TextField,
   FormControl,
   InputLabel,
+  FormHelperText,
   Select,
   MenuItem,
   Alert,
@@ -20,7 +21,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUploadReport } from '../../features/upload/useUploadReport';
 import { Controller } from 'react-hook-form';
 import BackButton from '../../shared/ui/buttons/BackButton';
@@ -28,6 +29,12 @@ import LoadingState from '../../shared/ui/LoadingState';
 
 export default function UploadPage() {
   const navigate = useNavigate();
+import DeleteItemButton from '../../shared/ui/buttons/DeleteItemButton';
+
+export default function UploadPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [successOpen, setSuccessOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState(''); // hmart, emart, amart
 
   const {
@@ -44,6 +51,11 @@ export default function UploadPage() {
     receiptItems,
     selectedReceiptIndex,
     selectReceiptItem,
+    storeName,
+    receiptItems,
+    selectedReceiptIndex,
+    selectReceiptItem,
+    removeReceiptItem,
     mode,
     setMode,
     setSelectedStoreType,
@@ -61,6 +73,13 @@ export default function UploadPage() {
     hasFile,
     canUpload,
   } = useUploadReport();
+
+  useEffect(() => {
+    const modeParam = (searchParams.get('mode') || '').toLowerCase();
+    if (modeParam === 'receipt' || modeParam === 'single') {
+      setMode(modeParam);
+    }
+  }, [searchParams, setMode]);
 
   useEffect(() => {
     setSelectedStoreType(selectedStore);
@@ -101,6 +120,57 @@ export default function UploadPage() {
 
   const isBusy = loading || uploadLoading;
   const loadingText = loading ? 'Running OCR...' : 'Uploading report...';
+  useEffect(() => {
+    if (mode !== 'receipt') return;
+
+    if (!selectedStore) {
+      if (storeName) {
+        setValue('storeName', '', { shouldValidate: true });
+      }
+      return;
+    }
+
+    const hasCurrentStore = filteredStores.some((s) => s.name === storeName);
+
+    if (selectedStore === 'emart' && filteredStores.length === 1) {
+      const onlyStore = filteredStores[0].name;
+      if (storeName !== onlyStore) {
+        setValue('storeName', onlyStore, { shouldValidate: true });
+      }
+      return;
+    }
+
+    if (!hasCurrentStore && storeName) {
+      setValue('storeName', '', { shouldValidate: true });
+    }
+  }, [filteredStores, mode, selectedStore, setValue, storeName]);
+
+  const requiresManualLocation =
+    mode === 'receipt' && (selectedStore === 'hmart' || selectedStore === 'amart');
+  const receiptStoreMissing = requiresManualLocation && !storeName?.trim();
+  const receiptStoreUnavailable =
+    mode === 'receipt' && !!selectedStore && filteredStores.length === 0;
+
+  useEffect(() => {
+    if (!saveMsg) return;
+
+    const isSuccess =
+      saveMsg.toLowerCase().includes('complete') || saveMsg.startsWith('✅');
+
+    if (!isSuccess) return;
+
+    const openTimer = setTimeout(() => {
+      setSuccessOpen(true);
+    }, 0);
+    const navigateTimer = setTimeout(() => {
+      navigate('/report');
+    }, 1200);
+
+    return () => {
+      clearTimeout(openTimer);
+      clearTimeout(navigateTimer);
+    };
+  }, [saveMsg, navigate]);
 
   return (
     <Box sx={{ maxWidth: 860, mx: 'auto', px: { xs: 1.5, sm: 2 }, py: 3 }}>
@@ -362,6 +432,18 @@ export default function UploadPage() {
                               >
                                 {displayPrice}
                               </Typography>
+                              <Stack
+                                direction="row"
+                                spacing={0.5}
+                                alignItems="center"
+                                sx={{ flexShrink: 0 }}
+                              >
+                                <Typography fontWeight={800}>{displayPrice}</Typography>
+                                <DeleteItemButton
+                                  onDelete={() => removeReceiptItem(idx)}
+                                  iconColor="error.main"
+                                />
+                              </Stack>
                             </Stack>
                           </Paper>
                         );
@@ -450,7 +532,10 @@ export default function UploadPage() {
                 render={({ field }) => (
                   <FormControl
                     fullWidth
-                    error={submitted && !!errors.storeName}
+                    error={
+                      submitted &&
+                      (!!errors.storeName || receiptStoreMissing || receiptStoreUnavailable)
+                    }
                   >
                     <InputLabel>Store</InputLabel>
                     <Select
@@ -468,6 +553,19 @@ export default function UploadPage() {
                         </MenuItem>
                       ))}
                     </Select>
+                    {submitted && errors.storeName?.message && (
+                      <FormHelperText>{errors.storeName.message}</FormHelperText>
+                    )}
+                    {submitted && !errors.storeName?.message && receiptStoreMissing && (
+                      <FormHelperText>
+                        Please select a store location before upload.
+                      </FormHelperText>
+                    )}
+                    {submitted && !errors.storeName?.message && !receiptStoreMissing && receiptStoreUnavailable && (
+                      <FormHelperText>
+                        No matching store location found for this mart.
+                      </FormHelperText>
+                    )}
                   </FormControl>
                 )}
               />
