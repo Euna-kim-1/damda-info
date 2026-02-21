@@ -1,11 +1,17 @@
 import { Box, Stack, Typography } from '@mui/material';
 import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
 
+const FEEDBACK_EMAIL = (import.meta.env.VITE_FEEDBACK_EMAIL || '').trim();
+const FEEDBACK_MAILTO = FEEDBACK_EMAIL
+  ? `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('Damda Feedback')}`
+  : '';
+
 const launchBannerItems = [
   {
     tag: 'Product Updates',
     title: 'Tell us what to improve\nWe review every idea\nand ship updates',
     cta: 'Send feedback',
+    action: 'feedback',
     variantStyle: 'primary3',
     sx: {
       bgcolor: '#F5F8F3',
@@ -97,7 +103,14 @@ const HomeLaunchBanners = () => (
           {item.title}
         </Typography>
         <Box sx={{ mt: 'auto', pt: 1.3 }}>
-          <PrimaryButton variantStyle={item.variantStyle}>{item.cta}</PrimaryButton>
+          <PrimaryButton
+            variantStyle={item.variantStyle}
+            component={item.action === 'feedback' && FEEDBACK_MAILTO ? 'a' : 'button'}
+            href={item.action === 'feedback' ? FEEDBACK_MAILTO : undefined}
+            disabled={item.action === 'feedback' && !FEEDBACK_MAILTO}
+          >
+            {item.cta}
+          </PrimaryButton>
         </Box>
       </Box>
     ))}
