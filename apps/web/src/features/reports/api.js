@@ -14,3 +14,14 @@ export const fetchRecentReports = ({ page = 1, limit = 10, q } = {}) => {
 
   return apiGet(`/report?${params.toString()}`);
 };
+
+/**
+ * 인기 report 목록 가져오기 (product_id 기준 집계 Top N)
+ * @param {number} limit
+ */
+export const fetchPopularReports = ({ limit = 5 } = {}) => {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+
+  return apiGet(`/report/popular?${params.toString()}`);
+};

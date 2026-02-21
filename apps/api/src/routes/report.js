@@ -16,6 +16,125 @@ function isReceiptPhotoPath(photoPath = '') {
   return String(photoPath).startsWith('receipt/');
 }
 
+function extractCount(value) {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return 0;
+    const first = value[0];
+    if (typeof first === 'number') return first;
+    const parsed = Number(first?.count);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  const parsed = Number(value?.count);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+router.get('/popular', async (req, res) => {
+  try {
+    const bucket = process.env.SUPABASE_BUCKET || 'damda-images';
+    const parsedLimit = Number(req.query.limit || 5);
+    const limit = Math.min(
+      Math.max(Number.isFinite(parsedLimit) ? Math.trunc(parsedLimit) : 5, 1),
+      20,
+    );
+
+    const { data: products, error: productsErr } = await supabase
+      .from('products')
+      .select(
+        `
+          id,
+          name,
+          price_reports(count)
+        `,
+      );
+
+    if (productsErr) throw productsErr;
+
+    const rankedProducts = (products || [])
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        popularity_count: extractCount(p.price_reports),
+      }))
+      .filter((p) => p.popularity_count > 0)
+      .sort((a, b) => b.popularity_count - a.popularity_count)
+      .slice(0, limit);
+
+    if (rankedProducts.length === 0) {
+      return res.json({
+        ok: true,
+        reports: [],
+        limit,
+      });
+    }
+
+    const topProductIds = rankedProducts.map((p) => p.id);
+    const { data: latestReports, error: latestErr } = await supabase
+      .from('price_reports')
+      .select(
+        `
+          id,
+          product_id,
+          price,
+          unit,
+          notes,
+          photo_path,
+          reported_at,
+          stores:store_id ( id, name )
+        `,
+      )
+      .in('product_id', topProductIds)
+      .order('reported_at', { ascending: false });
+
+    if (latestErr) throw latestErr;
+
+    const latestByProductId = new Map();
+    for (const row of latestReports || []) {
+      if (!latestByProductId.has(row.product_id)) {
+        latestByProductId.set(row.product_id, row);
+      }
+    }
+
+    const reports = rankedProducts
+      .map((p) => {
+        const latest = latestByProductId.get(p.id);
+        if (!latest) return null;
+
+        const imageUrl = isReceiptPhotoPath(latest.photo_path)
+          ? getBasketImagePath()
+          : (supabase.storage.from(bucket).getPublicUrl(latest.photo_path)?.data
+              ?.publicUrl ?? null);
+
+        return {
+          id: latest.id,
+          price: latest.price,
+          unit: latest.unit,
+          notes: latest.notes,
+          reported_at: latest.reported_at,
+          product_name: p.name ?? null,
+          store_name: latest.stores?.name ?? null,
+          image_url: imageUrl,
+          popularity_count: p.popularity_count,
+        };
+      })
+      .filter(Boolean);
+
+    return res.json({
+      ok: true,
+      reports,
+      limit,
+    });
+  } catch (err) {
+    console.error('REPORT POPULAR GET error:', err);
+    return res
+      .status(500)
+      .json({ ok: false, error: String(err?.message || err) });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const bucket = process.env.SUPABASE_BUCKET || 'damda-images';
