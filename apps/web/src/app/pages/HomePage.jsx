@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Box, Typography, Stack, TextField, InputAdornment } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../shared/layout/ContainerSection';
 import PrimaryButton from '../../shared/ui/buttons/PrimaryButton';
 import { ReportCard } from '../../shared/ui/reports';
-import { useRecentReports } from '../../features/reports/hooks';
+import { usePopularReports, useRecentReports } from '../../features/reports/hooks';
 import StoresMapView from './store/StoresMapView';
 import AddHomeWorkOutlinedIcon from '@mui/icons-material/AddHomeWorkOutlined';
 import SearchIcon from '@mui/icons-material/Search';
@@ -21,11 +21,23 @@ const HomePage = () => {
     startX: 0,
     startScrollLeft: 0,
   });
-  const { data, isLoading, isError } = useRecentReports({
+  const {
+    data: recentData,
+    isLoading: isRecentLoading,
+    isError: isRecentError,
+  } = useRecentReports({
     page: 1,
     pageSize: 10,
   });
-  const items = data?.reports ?? [];
+  const {
+    data: popularData,
+    isLoading: isPopularLoading,
+    isError: isPopularError,
+  } = usePopularReports({
+    limit: 5,
+  });
+  const items = useMemo(() => recentData?.reports ?? [], [recentData]);
+  const popularItems = useMemo(() => popularData?.reports ?? [], [popularData]);
 
   const onSearch = () => {
     const query = searchKeyword.trim();
@@ -103,7 +115,21 @@ const HomePage = () => {
           </PrimaryButton>
         </Stack>
 
-        {!isLoading && !isError && (
+        {isPopularLoading && <LoadingState />}
+
+        {isPopularError && (
+          <Typography sx={{ color: 'error.main' }}>
+            Failed to load popular reports.
+          </Typography>
+        )}
+
+        {!isPopularLoading && !isPopularError && popularItems.length === 0 && (
+          <Typography sx={{ color: 'text.secondary' }}>
+            No popular reports yet.
+          </Typography>
+        )}
+
+        {!isPopularLoading && !isPopularError && (
           <Stack
             ref={popularRowRef}
             direction="row"
@@ -151,7 +177,7 @@ const HomePage = () => {
               },
             }}
           >
-            {items.slice(0, 6).map((r) => (
+            {popularItems.map((r) => (
               <ReportCard key={`popular-${r.id}`} variant="popular" report={r} />
             ))}
           </Stack>
@@ -175,21 +201,21 @@ const HomePage = () => {
           </PrimaryButton>
         </Stack>
 
-        {isLoading && <LoadingState />}
+        {isRecentLoading && <LoadingState />}
 
-        {isError && (
+        {isRecentError && (
           <Typography sx={{ color: 'error.main' }}>
             Failed to load reports.
           </Typography>
         )}
 
-        {!isLoading && !isError && items.length === 0 && (
+        {!isRecentLoading && !isRecentError && items.length === 0 && (
           <Typography sx={{ color: 'text.secondary' }}>
             No reports yet.
           </Typography>
         )}
 
-        {!isLoading && !isError && (
+        {!isRecentLoading && !isRecentError && (
           <Stack spacing={1.2}>
             {items.slice(0, 2).map((r) => (
               <ReportCard key={r.id} variant="recent" report={r} />
@@ -202,7 +228,7 @@ const HomePage = () => {
         <Typography sx={{ fontWeight: 800, mb: 1.5 }}>Stores</Typography>
 
         <Box sx={{ position: 'relative' }}>
-          <StoresMapView showLoading={!isLoading} />
+          <StoresMapView showLoading={!isRecentLoading} />
           <PrimaryButton
             startIcon={<AddHomeWorkOutlinedIcon fontSize="small" />}
             variantStyle="primary2"
