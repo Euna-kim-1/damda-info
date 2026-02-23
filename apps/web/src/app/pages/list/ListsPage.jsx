@@ -108,6 +108,19 @@ const ListsPage = () => {
 
   return (
     <Box sx={{ px: 2, py: 2, maxWidth: 720, mx: 'auto' }}>
+      <Typography
+        variant="overline"
+        sx={{
+          display: 'block',
+          color: 'text.secondary',
+          px: 0.5,
+          mb: 1.5,
+          letterSpacing: 1.2,
+          fontSize: 12,
+        }}
+      >
+        Plan your shopping list by date.
+      </Typography>
       <Box
         sx={(theme) => ({
           borderRadius: 1,

@@ -1,17 +1,19 @@
 import { Backdrop, CircularProgress, Stack, Typography } from '@mui/material';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 
-const LoadingState = ({ text = 'Loading...', sx, open = true }) => {
+const LoadingState = ({
+  text = 'Loading...',
+  sx,
+  open = true,
+  status = 'loading',
+}) => {
   const chars = String(text).split('');
   const charStep = 0.14;
   const cycleDuration = Math.max(2, chars.length * charStep + 0.9);
-  const paletteWave = [
-    '#FFF5C2',
-    '#FFE999',
-    '#FFDC70',
-    '#FFD047',
-    '#F4BE2F',
-    '#D9A514',
-  ];
+  const isSuccess = status === 'success';
+  const paletteWave = isSuccess
+    ? ['#B7F5C7', '#8DEAAF', '#5DDD95', '#38C97A', '#28B66B', '#1F9E5C']
+    : ['#FFF5C2', '#FFE999', '#FFDC70', '#FFD047', '#F4BE2F', '#D9A514'];
 
   return (
     <Backdrop
@@ -24,11 +26,20 @@ const LoadingState = ({ text = 'Loading...', sx, open = true }) => {
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1.5}>
-        <CircularProgress size={20} thickness={4} sx={{ color: '#FFF5C2' }} />
+        {isSuccess ? (
+          <CheckCircleRoundedIcon
+            sx={{
+              fontSize: 24,
+              color: '#B7F5C7',
+            }}
+          />
+        ) : (
+          <CircularProgress size={20} thickness={4} sx={{ color: '#FFF5C2' }} />
+        )}
         <Typography
           sx={{
             fontSize: 17,
-            fontWeight: 600,
+            fontWeight: isSuccess ? 700 : 600,
             '@keyframes loadingTextWave': {
               '0%, 100%': {
                 color: 'rgba(255,255,255,0.72)',

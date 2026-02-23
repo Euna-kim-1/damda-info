@@ -14,10 +14,6 @@ import {
   Select,
   MenuItem,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -158,190 +154,224 @@ export default function UploadPage() {
   }, [saveMsg, navigate]);
 
   return (
-    <Box sx={{ maxWidth: 860, mx: 'auto', px: { xs: 1.5, sm: 2 }, py: 3 }}>
+    <Box sx={{ maxWidth: 860, mx: 'auto', px: { xs: 1.5, sm: 2 }, py: 2 }}>
       <Stack spacing={2.5}>
-        {/* ================= PICK / PREVIEW ================= */}
-        <Paper
-          sx={{
-            p: 2.5,
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Stack spacing={2}>
-            {/* Header */}
-            <Stack
-              direction="row"
-              alignItems="flex-start"
-              justifyContent="space-between"
-            >
-              <Box sx={{ minWidth: 0 }}>
-                <Stack direction="row" spacing={1} alignItems="baseline">
-                  <Typography sx={{ fontWeight: 900, fontSize: 20 }}>
-                    Upload
-                  </Typography>
-                  <Typography
-                    sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 700 }}
-                  >
-                    ({ocrScanCount}/{ocrLimitLabel})
-                  </Typography>
-                </Stack>
-                <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
-                  {mode === 'receipt'
-                    ? 'Select mode and store first, then choose a photo.'
-                    : 'Select mode first, then choose a photo.'}
-                </Typography>
-              </Box>
-
-              <BackButton onClick={() => navigate(-1)} />
-            </Stack>
-
-            {/* ✅ Centered controls */}
-            <Stack spacing={1.25} alignItems="center">
-              {/* Toggle - Single/Receipt */}
-              <ToggleButtonGroup
-                value={mode}
-                exclusive
-                onChange={(_, v) => v && setMode(v)}
-                size="small"
-                sx={{
-                  borderRadius: 999,
-                  overflow: 'hidden',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  '& .MuiToggleButton-root': {
-                    px: 3,
-                    py: 1,
-                    fontWeight: 900,
-                    textTransform: 'none',
-                    borderRadius: 0,
-                    minWidth: 140,
-                  },
-                }}
-              >
-                <ToggleButton value="single">Single photo</ToggleButton>
-                <ToggleButton value="receipt">Receipt</ToggleButton>
-              </ToggleButtonGroup>
-
-              <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
-                {mode === 'receipt'
-                  ? 'Receipt mode: extract multiple items'
-                  : 'Single mode: extract one product'}
-              </Typography>
-
-              {mode === 'receipt' && (
-                <>
-                  <ToggleButtonGroup
-                    value={selectedStore}
-                    exclusive
-                    onChange={(_, v) => v && setSelectedStore(v)}
-                    size="small"
-                    sx={{
-                      borderRadius: 999,
-                      overflow: 'hidden',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      '& .MuiToggleButton-root': {
-                        px: 2.5,
-                        py: 0.8,
-                        fontWeight: 900,
-                        textTransform: 'none',
-                        borderRadius: 0,
-                        minWidth: 100,
-                        fontSize: 14,
-                      },
-                    }}
-                  >
-                    <ToggleButton value="hmart">H-mart</ToggleButton>
-                    <ToggleButton value="emart">E-mart</ToggleButton>
-                    <ToggleButton value="amart">A-mart</ToggleButton>
-                  </ToggleButtonGroup>
-
-                  <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
-                    {selectedStore
-                      ? `Selected: ${selectedStore.toUpperCase()}`
-                      : 'Select a store for accurate OCR parsing'}
-                  </Typography>
-                </>
-              )}
-
-              {/* Choose + Cancel */}
+        <Stack spacing={1.5}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: 'text.secondary',
+              px: 0.5,
+              letterSpacing: 1.2,
+              fontSize: 12,
+            }}
+          >
+            Upload a receipt or product photo.
+          </Typography>
+          {/* ================= PICK / PREVIEW ================= */}
+          <Paper
+            sx={{
+              p: 2.5,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Stack spacing={2}>
+              {/* Header */}
               <Stack
                 direction="row"
-                spacing={1}
-                justifyContent="center"
-                flexWrap="wrap"
+                alignItems="flex-start"
+                justifyContent="space-between"
               >
-                <Button
-                  variant="contained"
-                  component="label"
-                  disabled={
-                    loading ||
-                    uploadLoading ||
-                    ocrLimitReached ||
-                    (mode === 'receipt' && !selectedStore)
-                  }
-                  sx={{
-                    fontWeight: 900,
-                    px: 3.5,
-                    py: 1.2,
-                    borderRadius: 999,
-                    whiteSpace: 'nowrap',
-                    minWidth: 260,
-                  }}
-                >
-                  {mode === 'receipt'
-                    ? 'Choose receipt photo'
-                    : 'Choose product photo'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    hidden
-                    onChange={onPick}
-                  />
-                </Button>
+                <Box sx={{ minWidth: 0 }}>
+                  <Stack direction="row" spacing={1} alignItems="baseline">
+                    <Typography sx={{ fontWeight: 900, fontSize: 20 }}>
+                      Upload
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: 'text.secondary',
+                        fontSize: 13,
+                        fontWeight: 700,
+                      }}
+                    >
+                      ({ocrScanCount}/{ocrLimitLabel})
+                    </Typography>
+                  </Stack>
+                  <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
+                    {mode === 'receipt'
+                      ? 'Select mode and store first, then choose a photo.'
+                      : 'Select mode first, then choose a photo.'}
+                  </Typography>
+                </Box>
 
-                {hasFile && (
-                  <Button
-                    variant="text"
-                    onClick={() => {
-                      resetUpload();
-                    }}
-                    disabled={loading || uploadLoading}
-                    sx={{ fontWeight: 800, whiteSpace: 'nowrap' }}
-                  >
-                    Cancel
-                  </Button>
-                )}
+                <BackButton onClick={() => navigate(-1)} />
               </Stack>
-              {ocrLimitReached && (
-                <Alert severity="warning" sx={{ width: '100%', maxWidth: 520 }}>
-                  OCR free limit reached ({ocrLimitLabel}/{ocrLimitLabel}).
-                </Alert>
-              )}
-            </Stack>
 
-            {/* Preview */}
-            {previewUrl && (
-              <Box>
-                <Typography sx={{ fontWeight: 800, mb: 1 }}>Preview</Typography>
-                <Box
-                  component="img"
-                  src={previewUrl}
-                  alt="preview"
+              {/* ✅ Centered controls */}
+              <Stack spacing={1.25} alignItems="center">
+                {/* Toggle - Single/Receipt */}
+                <ToggleButtonGroup
+                  value={mode}
+                  exclusive
+                  onChange={(_, v) => v && setMode(v)}
+                  size="small"
                   sx={{
-                    width: '100%',
-                    borderRadius: 3,
+                    borderRadius: 999,
+                    overflow: 'hidden',
                     border: '1px solid',
                     borderColor: 'divider',
+                    '& .MuiToggleButton-root': {
+                      px: 3,
+                      py: 1,
+                      fontWeight: 900,
+                      textTransform: 'none',
+                      borderRadius: 0,
+                      minWidth: 140,
+                      color: 'secondary.main',
+                      '&.Mui-selected, &.Mui-selected:hover': {
+                        bgcolor: 'secondary.light',
+                        color: 'secondary.contrastText',
+                        borderColor: 'secondary.light',
+                      },
+                    },
                   }}
-                />
-              </Box>
-            )}
-          </Stack>
-        </Paper>
+                >
+                  <ToggleButton value="single">Single photo</ToggleButton>
+                  <ToggleButton value="receipt">Receipt</ToggleButton>
+                </ToggleButtonGroup>
+
+                <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
+                  {mode === 'receipt'
+                    ? 'Receipt mode: extract multiple items'
+                    : 'Single mode: extract one product'}
+                </Typography>
+
+                {mode === 'receipt' && (
+                  <>
+                    <ToggleButtonGroup
+                      value={selectedStore}
+                      exclusive
+                      onChange={(_, v) => v && setSelectedStore(v)}
+                      size="small"
+                      sx={{
+                        borderRadius: 999,
+                        overflow: 'hidden',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        '& .MuiToggleButton-root': {
+                          px: 2.5,
+                          py: 0.8,
+                          fontWeight: 900,
+                          textTransform: 'none',
+                          borderRadius: 0,
+                          minWidth: 100,
+                          fontSize: 14,
+                          color: 'secondary.main',
+                          '&.Mui-selected, &.Mui-selected:hover': {
+                            bgcolor: 'secondary.light',
+                            color: 'secondary.contrastText',
+                            borderColor: 'secondary.light',
+                          },
+                        },
+                      }}
+                    >
+                      <ToggleButton value="hmart">H-mart</ToggleButton>
+                      <ToggleButton value="emart">E-mart</ToggleButton>
+                      <ToggleButton value="amart">A-mart</ToggleButton>
+                    </ToggleButtonGroup>
+
+                    <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
+                      {selectedStore
+                        ? `Selected: ${selectedStore.toUpperCase()}`
+                        : 'Select a store for accurate OCR parsing'}
+                    </Typography>
+                  </>
+                )}
+
+                {/* Choose + Cancel */}
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  justifyContent="center"
+                  flexWrap="wrap"
+                >
+                  <Button
+                    variant="contained"
+                    component="label"
+                    disabled={
+                      loading ||
+                      uploadLoading ||
+                      ocrLimitReached ||
+                      (mode === 'receipt' && !selectedStore)
+                    }
+                    sx={{
+                      fontWeight: 900,
+                      px: 3.5,
+                      py: 1.2,
+                      borderRadius: 999,
+                      whiteSpace: 'nowrap',
+                      minWidth: 260,
+                    }}
+                  >
+                    {mode === 'receipt'
+                      ? 'Choose receipt photo'
+                      : 'Choose product photo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      hidden
+                      onChange={onPick}
+                    />
+                  </Button>
+
+                  {hasFile && (
+                    <Button
+                      variant="text"
+                      onClick={() => {
+                        resetUpload();
+                      }}
+                      disabled={loading || uploadLoading}
+                      sx={{ fontWeight: 800, whiteSpace: 'nowrap' }}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </Stack>
+                {ocrLimitReached && (
+                  <Alert
+                    severity="warning"
+                    sx={{ width: '100%', maxWidth: 520 }}
+                  >
+                    OCR free limit reached ({ocrLimitLabel}/{ocrLimitLabel}).
+                  </Alert>
+                )}
+              </Stack>
+
+              {/* Preview */}
+              {previewUrl && (
+                <Box>
+                  <Typography sx={{ fontWeight: 800, mb: 1 }}>
+                    Preview
+                  </Typography>
+                  <Box
+                    component="img"
+                    src={previewUrl}
+                    alt="preview"
+                    sx={{
+                      width: '100%',
+                      borderRadius: 3,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                  />
+                </Box>
+              )}
+            </Stack>
+          </Paper>
+        </Stack>
 
         {/* ================= EXTRACTED ================= */}
         <Paper
@@ -603,16 +633,12 @@ export default function UploadPage() {
         </Paper>
       </Stack>
 
-      <LoadingState open={isBusy} text={loadingText} />
-
-      {/* SUCCESS MODAL */}
-      <Dialog open={successOpen} onClose={() => {}}>
-        <DialogTitle>Upload complete</DialogTitle>
-        <DialogContent>{saveMsg}</DialogContent>
-        <DialogActions>
-          <Button onClick={() => navigate('/report')}>Go now</Button>
-        </DialogActions>
-      </Dialog>
+      <LoadingState open={isBusy && !successOpen} text={loadingText} />
+      <LoadingState
+        open={successOpen}
+        status="success"
+        text="Success"
+      />
     </Box>
   );
 }

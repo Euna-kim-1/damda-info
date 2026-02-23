@@ -20,11 +20,13 @@ import {
 import { apiGet } from '../../../shared/api/client';
 import {
   createStoreMarkerIcons,
+  getStoreMarkerColor,
   getStoreMarkerIcon,
 } from '../../../shared/ui/store/StoreMapIcons';
 import PrimaryButton from '../../../shared/ui/buttons/PrimaryButton';
 import LoadingState from '../../../shared/ui/LoadingState';
 import NearMeIcon from '@mui/icons-material/NearMe';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 
 const FitToStores = ({ stores, padding }) => {
   const map = useMap();
@@ -323,18 +325,26 @@ const StoresMapView = ({
 
       {enableMyLocationFeatures && (
         <Box
-          sx={{
+          sx={(theme) => ({
             mt: 1,
-            p: 1.25,
-            borderRadius: 2,
+            p: 1.5,
+            borderRadius: 1.25,
             border: '1px solid',
             borderColor: 'divider',
             bgcolor: 'background.paper',
-          }}
+            boxShadow: `0 8px 20px ${theme.palette.primary.main}10`,
+          })}
         >
-          <Typography sx={{ fontWeight: 800, mb: 0.75 }}>
-            Nearest stores
-          </Typography>
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={0.75}
+            sx={{ mb: 1 }}
+          >
+            <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+              Nearest stores
+            </Typography>
+          </Stack>
 
           {!myPos ? (
             <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>
@@ -346,24 +356,50 @@ const StoresMapView = ({
             </Typography>
           ) : (
             <Stack spacing={0.75}>
-              {storesWithDistance.map((s, idx) => (
+              {storesWithDistance.map((s) => (
                 <Box
                   key={s.id || s.name}
                   sx={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'baseline',
+                    alignItems: 'center',
                     gap: 2,
+                    py: 0.4,
                   }}
                 >
-                  <Typography sx={{ fontSize: 13 }}>
-                    {idx + 1}. {s.name}
-                  </Typography>
+                  <Stack
+                    direction="row"
+                    spacing={0.9}
+                    alignItems="center"
+                    sx={{ minWidth: 0 }}
+                  >
+                    <StorefrontIcon
+                      sx={{
+                        fontSize: 16,
+                        color: getStoreMarkerColor(s.name),
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {s.name}
+                    </Typography>
+                  </Stack>
                   <Typography
                     sx={{
-                      fontSize: 13,
-                      color: 'text.secondary',
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      color: 'secondary.dark',
                       whiteSpace: 'nowrap',
+                      flexShrink: 0,
                     }}
                   >
                     {s.distanceKm?.toFixed(2)} km

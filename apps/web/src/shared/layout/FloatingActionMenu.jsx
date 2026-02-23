@@ -49,14 +49,14 @@ const FloatingActionMenu = ({ actions, radius = 84 }) => {
               position: 'absolute',
               left: '50%',
               top: '50%',
-              width: 52,
-              height: 52,
+              width: { xs: 46, sm: 52 },
+              height: { xs: 46, sm: 52 },
               bgcolor: 'background.paper',
               color: action.color ?? 'text.primary',
               boxShadow: 3,
               border: '1px solid',
               borderColor: 'divider',
-              fontSize: 26,
+              fontSize: { xs: 22, sm: 26 },
               opacity: open ? 1 : 0,
               pointerEvents: open ? 'auto' : 'none',
               transform: open
@@ -77,8 +77,8 @@ const FloatingActionMenu = ({ actions, radius = 84 }) => {
         onClick={() => setOpen((value) => !value)}
         sx={{
           position: 'relative',
-          width: 56,
-          height: 56,
+          width: { xs: 50, sm: 56 },
+          height: { xs: 50, sm: 56 },
           bgcolor: 'secondary.light',
           color: '#fff',
           boxShadow: 4,
@@ -87,7 +87,7 @@ const FloatingActionMenu = ({ actions, radius = 84 }) => {
           '&:hover': { bgcolor: 'secondary.main' },
         }}
       >
-        <Typography component="span" fontSize={26} fontWeight={700}>
+        <Typography component="span" fontSize={{ xs: 23, sm: 26 }} fontWeight={700}>
           {open ? '×' : '+'}
         </Typography>
       </IconButton>

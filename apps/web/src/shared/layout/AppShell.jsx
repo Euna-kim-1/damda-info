@@ -19,7 +19,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
-const NAV_HEIGHT = 64;
+const NAV_HEIGHT = { xs: 58, sm: 64 };
 const navItems = [
   { label: 'Home', value: '/', icon: <CottageOutlinedIcon /> },
   { label: 'Report', value: '/report', icon: <LocalMallOutlinedIcon /> },
@@ -93,7 +93,16 @@ const AppShell = ({ children }) => {
       {/* 상단 네비는 공통 */}
       <TopNav />
 
-      <Box sx={{ pb: `${NAV_HEIGHT + 16}px` }}>{children}</Box>
+      <Box
+        sx={{
+          pb: {
+            xs: `${NAV_HEIGHT.xs + 12}px`,
+            sm: `${NAV_HEIGHT.sm + 16}px`,
+          },
+        }}
+      >
+        {children}
+      </Box>
 
       <Paper
         elevation={12}
@@ -125,11 +134,14 @@ const AppShell = ({ children }) => {
                 borderColor: 'divider',
                 bgcolor: 'background.paper',
                 boxShadow: 8,
-                px: { xs: 0.5, sm: 1.5 },
+                px: { xs: 0.25, sm: 1.5 },
                 '& .MuiBottomNavigationAction-root': {
-                  minWidth: 52,
+                  minWidth: { xs: 44, sm: 52 },
                   color: 'text.secondary',
                   borderRadius: 999,
+                },
+                '& .MuiBottomNavigationAction-root .MuiSvgIcon-root': {
+                  fontSize: { xs: 22, sm: 24 },
                 },
                 '& .MuiBottomNavigationAction-root.Mui-selected': {
                   color: 'primary.dark',
@@ -151,8 +163,7 @@ const AppShell = ({ children }) => {
                 />
               ))}
             </BottomNavigation>
-
-            <FloatingActionMenu actions={fabActions} radius={92} />
+            <FloatingActionMenu actions={fabActions} radius={84} />
           </Box>
         </ContainerSection>
       </Paper>

@@ -12,6 +12,19 @@ function getBasketImagePath() {
   return `/basket/${idx}.png`;
 }
 
+function getStableBasketImagePath(seed) {
+  const text = String(seed ?? '').trim();
+  if (!text) return getBasketImagePath();
+
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  }
+
+  const idx = (hash % BASKET_IMAGE_COUNT) + 1;
+  return `/basket/${idx}.png`;
+}
+
 function isReceiptPhotoPath(photoPath = '') {
   return String(photoPath).startsWith('receipt/');
 }
@@ -104,7 +117,7 @@ router.get('/popular', async (req, res) => {
         if (!latest) return null;
 
         const imageUrl = isReceiptPhotoPath(latest.photo_path)
-          ? getBasketImagePath()
+          ? getStableBasketImagePath(latest.id)
           : (supabase.storage.from(bucket).getPublicUrl(latest.photo_path)?.data
               ?.publicUrl ?? null);
 
@@ -229,7 +242,7 @@ router.get('/', async (req, res) => {
 
     const reports = visibleRows.map((r) => {
       const imageUrl = isReceiptPhotoPath(r.photo_path)
-        ? getBasketImagePath()
+        ? getStableBasketImagePath(r.id)
         : (supabase.storage.from(bucket).getPublicUrl(r.photo_path)?.data
             ?.publicUrl ?? null);
 

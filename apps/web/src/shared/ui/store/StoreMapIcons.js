@@ -23,14 +23,21 @@ const createGroceryIcon = (color) =>
     tooltipAnchor: [0, -24],
   });
 
+const STORE_MARKER_COLORS = {
+  emart: '#f4c542',
+  hmart: '#2f6bff',
+  amart: '#ef5350',
+  default: '#6c7a89',
+};
+
 export const createStoreMarkerIcons = () => ({
-  emart: createGroceryIcon('#f4c542'),
-  hmart: createGroceryIcon('#2f6bff'),
-  amart: createGroceryIcon('#ef5350'),
-  default: createGroceryIcon('#6c7a89'),
+  emart: createGroceryIcon(STORE_MARKER_COLORS.emart),
+  hmart: createGroceryIcon(STORE_MARKER_COLORS.hmart),
+  amart: createGroceryIcon(STORE_MARKER_COLORS.amart),
+  default: createGroceryIcon(STORE_MARKER_COLORS.default),
 });
 
-export const getStoreMarkerIcon = (storeName, icons) => {
+export const getStoreMarkerType = (storeName) => {
   const normalized = normalizeName(storeName || '');
   const compact = normalized.replace(/[\s-]/g, '');
 
@@ -39,7 +46,7 @@ export const getStoreMarkerIcon = (storeName, icons) => {
     normalized.includes('e마트') ||
     compact.includes('emart')
   ) {
-    return icons.emart;
+    return 'emart';
   }
 
   if (
@@ -47,7 +54,7 @@ export const getStoreMarkerIcon = (storeName, icons) => {
     normalized.includes('h마켓') ||
     compact.includes('hmart')
   ) {
-    return icons.hmart;
+    return 'hmart';
   }
 
   if (
@@ -55,8 +62,17 @@ export const getStoreMarkerIcon = (storeName, icons) => {
     normalized.includes('a마트') ||
     compact.includes('amart')
   ) {
-    return icons.amart;
+    return 'amart';
   }
 
-  return icons.default;
+  return 'default';
+};
+
+export const getStoreMarkerColor = (storeName) =>
+  STORE_MARKER_COLORS[getStoreMarkerType(storeName)] ||
+  STORE_MARKER_COLORS.default;
+
+export const getStoreMarkerIcon = (storeName, icons) => {
+  const type = getStoreMarkerType(storeName);
+  return icons?.[type] || icons?.default;
 };
