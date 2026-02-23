@@ -16,16 +16,16 @@ const TopNav = () => {
       }}
     >
       <ContainerSection>
-        <Toolbar sx={{ gap: 2, minHeight: { xs: 72, sm: 80 } }}>
+        <Toolbar sx={{ gap: { xs: 1.25, sm: 2 }, minHeight: { xs: 58, sm: 72, md: 80 } }}>
           <Box
             component="img"
             src="/logo.png"
             alt="Damda"
             onClick={() => navigate('/')}
-            sx={{ height: 60, width: 'auto', cursor: 'pointer' }}
+            sx={{ height: { xs: 42, sm: 52, md: 60 }, width: 'auto', cursor: 'pointer' }}
           />
           <Box sx={{ flex: 1 }} />
-          <Avatar sx={{ width: 36, height: 36 }} />
+          <Avatar sx={{ width: { xs: 30, sm: 34, md: 36 }, height: { xs: 30, sm: 34, md: 36 } }} />
         </Toolbar>
       </ContainerSection>
     </AppBar>
