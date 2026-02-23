@@ -1,11 +1,8 @@
 import { Box, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import ContainerSection from '../../../shared/layout/ContainerSection';
 import StoresMapView from './StoresMapView';
-import BackButton from '../../../shared/ui/buttons/BackButton';
 
 const StoresMap = () => {
-  const navigate = useNavigate();
   return (
     <ContainerSection sx={{ py: 2 }}>
       <Box
@@ -13,15 +10,22 @@ const StoresMap = () => {
           mb: 1.5,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 2,
-          flexWrap: 'wrap',
+          gap: 1,
         }}
       >
-        <Box>
-          <Typography sx={{ fontWeight: 800, mb: 0.5 }}>Stores</Typography>
-        </Box>
-        <BackButton onClick={() => navigate(-1)} />
+        <Typography
+          variant="overline"
+          sx={{
+            display: 'block',
+            color: 'text.secondary',
+            width: '100%',
+            px: 0.5,
+            letterSpacing: 1.2,
+            fontSize: 12,
+          }}
+        >
+          Explore nearby stores on the map.
+        </Typography>
       </Box>
 
       <StoresMapView

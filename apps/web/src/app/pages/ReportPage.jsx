@@ -39,8 +39,18 @@ const ReportPage = () => {
 
   return (
     <ContainerSection sx={{ py: 2 }}>
-      <Typography variant="overline" sx={{ mb: 1 }}>
-        {q ? `Results for "${q}"` : 'Recent reports'}
+      <Typography
+        variant="overline"
+        sx={{
+          display: 'block',
+          color: 'text.secondary',
+          px: 0.5,
+          mb: 1.5,
+          letterSpacing: 1.2,
+          fontSize: 12,
+        }}
+      >
+        {q ? `Results for "${q}"` : 'Browse recent price reports.'}
       </Typography>
 
       {isLoading && <LoadingState />}

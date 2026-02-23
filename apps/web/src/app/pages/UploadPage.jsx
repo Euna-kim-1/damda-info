@@ -154,18 +154,30 @@ export default function UploadPage() {
   }, [saveMsg, navigate]);
 
   return (
-    <Box sx={{ maxWidth: 860, mx: 'auto', px: { xs: 1.5, sm: 2 }, py: 3 }}>
+    <Box sx={{ maxWidth: 860, mx: 'auto', px: { xs: 1.5, sm: 2 }, py: 2 }}>
       <Stack spacing={2.5}>
-        {/* ================= PICK / PREVIEW ================= */}
-        <Paper
-          sx={{
-            p: 2.5,
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Stack spacing={2}>
+        <Stack spacing={1.5}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: 'text.secondary',
+              px: 0.5,
+              letterSpacing: 1.2,
+              fontSize: 12,
+            }}
+          >
+            Upload a receipt or product photo.
+          </Typography>
+          {/* ================= PICK / PREVIEW ================= */}
+          <Paper
+            sx={{
+              p: 2.5,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Stack spacing={2}>
             {/* Header */}
             <Stack
               direction="row"
@@ -206,6 +218,12 @@ export default function UploadPage() {
                     textTransform: 'none',
                     borderRadius: 0,
                     minWidth: 140,
+                    color: 'secondary.main',
+                    '&.Mui-selected, &.Mui-selected:hover': {
+                      bgcolor: 'secondary.light',
+                      color: 'secondary.contrastText',
+                      borderColor: 'secondary.light',
+                    },
                   },
                 }}
               >
@@ -239,6 +257,12 @@ export default function UploadPage() {
                         borderRadius: 0,
                         minWidth: 100,
                         fontSize: 14,
+                        color: 'secondary.main',
+                        '&.Mui-selected, &.Mui-selected:hover': {
+                          bgcolor: 'secondary.light',
+                          color: 'secondary.contrastText',
+                          borderColor: 'secondary.light',
+                        },
                       },
                     }}
                   >
@@ -323,8 +347,9 @@ export default function UploadPage() {
                 />
               </Box>
             )}
-          </Stack>
-        </Paper>
+            </Stack>
+          </Paper>
+        </Stack>
 
         {/* ================= EXTRACTED ================= */}
         <Paper
