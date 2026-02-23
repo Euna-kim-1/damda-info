@@ -184,29 +184,21 @@ export default function UploadPage() {
                 alignItems="flex-start"
                 justifyContent="space-between"
               >
-                <Box sx={{ minWidth: 0 }}>
-                  <Stack direction="row" spacing={1} alignItems="baseline">
-                    <Typography sx={{ fontWeight: 900, fontSize: 20 }}>
-                      Upload
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: 'text.secondary',
-                        fontSize: 13,
-                        fontWeight: 700,
-                      }}
-                    >
-                      ({ocrScanCount}/{ocrLimitLabel})
-                    </Typography>
-                  </Stack>
-                  <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
-                    {mode === 'receipt'
-                      ? 'Select mode and store first, then choose a photo.'
-                      : 'Select mode first, then choose a photo.'}
+                <BackButton onClick={() => navigate(-1)} sx={{ mr: 1 }} />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography
+                    sx={{
+                      color: 'text.secondary',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      textAlign: 'right',
+                      lineHeight: 1.1,
+                      mb: 0.35,
+                    }}
+                  >
+                    ({ocrScanCount}/{ocrLimitLabel})
                   </Typography>
                 </Box>
-
-                <BackButton onClick={() => navigate(-1)} />
               </Stack>
 
               {/* ✅ Centered controls */}
@@ -340,6 +332,11 @@ export default function UploadPage() {
                     </Button>
                   )}
                 </Stack>
+                <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>
+                  {mode === 'receipt'
+                    ? 'Select mode and store first, then choose a photo.'
+                    : 'Select mode first, then choose a photo.'}
+                </Typography>
                 {ocrLimitReached && (
                   <Alert
                     severity="warning"
