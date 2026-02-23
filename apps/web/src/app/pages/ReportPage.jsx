@@ -1,4 +1,4 @@
-import { Box, Button, Pagination, Stack, Typography } from '@mui/material';
+import { Box, Pagination, Stack, Typography } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { useRecentReports } from '../../features/reports/hooks';
 import ContainerSection from '../../shared/layout/ContainerSection';
@@ -12,7 +12,7 @@ const ReportPage = () => {
   const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.trunc(rawPage) : 1;
   const pageSize = 10;
 
-  const { data, isLoading, isError, refetch } = useRecentReports({
+  const { data, isLoading, isError } = useRecentReports({
     page,
     pageSize,
     q: q || undefined,
@@ -56,13 +56,30 @@ const ReportPage = () => {
       {isLoading && <LoadingState />}
 
       {isError && (
-        <Box sx={{ mt: 1 }}>
-          <Typography color="error" sx={{ mb: 1 }}>
-            Failed to load reports.
+        <Box
+          sx={{
+            mt: 3,
+            mb: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 1.25,
+          }}
+        >
+          <Box
+            component="img"
+            src="/no-result.png"
+            alt="No results"
+            sx={{
+              width: { xs: 250, sm: 350 },
+              height: 'auto',
+              opacity: 0.92,
+            }}
+          />
+          <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'text.secondary' }}>
+            Failed to load
           </Typography>
-          <Button variant="outlined" onClick={() => refetch()}>
-            Retry
-          </Button>
         </Box>
       )}
 

@@ -1,6 +1,7 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import ContainerSection from '../../shared/layout/ContainerSection';
+import { formatFixedDecimal } from '../../shared/utils/formatters';
 
 const OPS = new Set(['+', '-', '×', '÷']);
 const isOp = (v) => OPS.has(v);
@@ -65,7 +66,7 @@ const CalculatorPage = () => {
         setDisplay('0');
         return;
       }
-      const safeResult = String(result);
+      const safeResult = formatFixedDecimal(result, 2, '0.00');
       setDisplay(safeResult);
       if (display.trim()) {
         setHistory((prev) => [{ expr: display, result: safeResult }, ...prev]);

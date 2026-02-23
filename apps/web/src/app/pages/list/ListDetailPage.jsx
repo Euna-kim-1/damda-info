@@ -36,7 +36,7 @@ const ListDetailPage = () => {
   const { listId } = useParams();
 
   const { data: lists } = useLists();
-  const { data: items, isLoading, isError, error } = useListItems(listId);
+  const { data: items, isLoading, isError } = useListItems(listId);
   const createItemMut = useCreateListItem(listId);
   const updateItemMut = useUpdateListItem(listId);
   const deleteItemMut = useDeleteListItem(listId);
@@ -209,9 +209,31 @@ const ListDetailPage = () => {
       </Box>
       {isLoading && <LoadingState />}
       {isError && (
-        <Typography color="error">
-          Failed to load items: {String(error?.message || error)}
-        </Typography>
+        <Box
+          sx={{
+            mt: 3,
+            mb: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 1.25,
+          }}
+        >
+          <Box
+            component="img"
+            src="/no-result.png"
+            alt="No results"
+            sx={{
+              width: { xs: 250, sm: 350 },
+              height: 'auto',
+              opacity: 0.92,
+            }}
+          />
+          <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'text.secondary' }}>
+            Failed to load
+          </Typography>
+        </Box>
       )}
 
       <List sx={{ p: 0, display: 'grid', gap: 1.25 }}>
@@ -360,18 +382,16 @@ const ListDetailPage = () => {
       <ListConfirmDialog
         open={confirmBulk}
         title="Delete checked items"
-        message={`Delete ${checkedItems.length} checked item${
-          checkedItems.length === 1 ? '' : 's'
-        }?`}
+        message={`Delete ${checkedItems.length} checked item${checkedItems.length === 1 ? '' : 's'
+          }?`}
         onClose={closeBulkConfirm}
         onConfirm={handleBulkDelete}
       />
       <ListConfirmDialog
         open={confirmReset}
         title="Reset checked items"
-        message={`Reset ${checkedItems.length} checked item${
-          checkedItems.length === 1 ? '' : 's'
-        }?`}
+        message={`Reset ${checkedItems.length} checked item${checkedItems.length === 1 ? '' : 's'
+          }?`}
         onClose={closeResetConfirm}
         onConfirm={handleResetChecked}
       />

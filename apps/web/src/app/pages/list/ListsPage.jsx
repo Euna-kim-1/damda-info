@@ -63,7 +63,7 @@ const getCreatedDateSet = (lists) => {
 
 const ListsPage = () => {
   const navigate = useNavigate();
-  const { data: lists, isLoading, isError, error } = useLists();
+  const { data: lists, isLoading, isError } = useLists();
   const createMut = useCreateList();
   const deleteMut = useDeleteList();
   const [confirmTarget, setConfirmTarget] = useState(null);
@@ -287,9 +287,31 @@ const ListsPage = () => {
 
       {isLoading && <LoadingState />}
       {isError && (
-        <Typography color="error">
-          Failed to load lists: {String(error?.message || error)}
-        </Typography>
+        <Box
+          sx={{
+            mt: 3,
+            mb: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 1.25,
+          }}
+        >
+          <Box
+            component="img"
+            src="/no-result.png"
+            alt="No results"
+            sx={{
+              width: { xs: 250, sm: 350 },
+              height: 'auto',
+              opacity: 0.92,
+            }}
+          />
+          <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'text.secondary' }}>
+            Failed to load
+          </Typography>
+        </Box>
       )}
 
       <List sx={{ p: 0, display: 'grid', gap: 1.5 }}>
