@@ -31,27 +31,32 @@ const VARIANT_STYLES = {
 };
 
 const PrimaryButton = forwardRef(
-  ({ children, sx, variantStyle = 'primary1', ...props }, ref) => (
-    <Button
-      disableElevation
-      ref={ref}
-      sx={[
-        {
-          borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 700,
-          px: 2.5,
-          py: 1,
-          gap: 0.5,
-        },
-        VARIANT_STYLES[variantStyle] || VARIANT_STYLES.primary3,
-        sx,
-      ]}
-      {...props}
-    >
-      <Box component="span">{children}</Box>
-    </Button>
-  ),
+  ({ children, sx, variantStyle = 'primary1', href, ...props }, ref) => {
+    const safeHref = typeof href === 'string' && href.trim() === '' ? undefined : href;
+
+    return (
+      <Button
+        disableElevation
+        ref={ref}
+        sx={[
+          {
+            borderRadius: 8,
+            textTransform: 'none',
+            fontWeight: 700,
+            px: 2.5,
+            py: 1,
+            gap: 0.5,
+          },
+          VARIANT_STYLES[variantStyle] || VARIANT_STYLES.primary3,
+          sx,
+        ]}
+        href={safeHref}
+        {...props}
+      >
+        <Box component="span">{children}</Box>
+      </Button>
+    );
+  },
 );
 
 export default PrimaryButton;
