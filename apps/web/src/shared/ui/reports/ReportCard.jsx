@@ -2,6 +2,8 @@ import { Box, Card, CardContent, CardMedia, Stack, Typography } from '@mui/mater
 import { formatPrice, formatShortDate } from '../../utils/formatters';
 import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
 
+const SHOW_POPULAR_FAVORITE_ICON = false;
+
 const ReportCard = ({
   variant = 'default',
   report,
@@ -62,6 +64,7 @@ const ReportCard = ({
               bgcolor: 'rgba(255,255,255,0.92)',
               display: 'grid',
               placeItems: 'center',
+              visibility: SHOW_POPULAR_FAVORITE_ICON ? 'visible' : 'hidden',
             }}
           >
             <FavoriteBorderRoundedIcon sx={{ fontSize: 14, color: 'text.secondary' }} />

@@ -2,6 +2,8 @@ import { AppBar, Toolbar, Box, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ContainerSection from './ContainerSection';
 
+const SHOW_PROFILE_AVATAR = false;
+
 const TopNav = () => {
   const navigate = useNavigate();
 
@@ -25,7 +27,14 @@ const TopNav = () => {
             sx={{ height: { xs: 42, sm: 52, md: 60 }, width: 'auto', cursor: 'pointer' }}
           />
           <Box sx={{ flex: 1 }} />
-          <Avatar sx={{ width: { xs: 30, sm: 34, md: 36 }, height: { xs: 30, sm: 34, md: 36 } }} />
+          <Avatar
+            sx={{
+              width: { xs: 30, sm: 34, md: 36 },
+              height: { xs: 30, sm: 34, md: 36 },
+              visibility: SHOW_PROFILE_AVATAR ? 'visible' : 'hidden',
+              pointerEvents: SHOW_PROFILE_AVATAR ? 'auto' : 'none',
+            }}
+          />
         </Toolbar>
       </ContainerSection>
     </AppBar>
