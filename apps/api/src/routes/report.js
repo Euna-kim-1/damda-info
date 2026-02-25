@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { supabase } from '../lib/supabase.js';
-import { normalizeName } from '../../../web/src/shared/utils/normalizeText.js';
+import { normalizeName } from '../utils/normalizeText.js';
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
